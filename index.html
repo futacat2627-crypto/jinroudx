@@ -1,0 +1,3260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>夜の村 - 人狼</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #c8a96e;
+    --accent2: #7b5ea7;
+    --wolf: #e05c5c;
+    --moon: #f0e6c8;
+    --text: #e8e0d0;
+    --muted: #7a7a9a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  button { touch-action: manipulation; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Stars background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 10% 15%, rgba(240,230,200,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 40%, rgba(240,230,200,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 10%, rgba(240,230,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 55%, rgba(240,230,200,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 20%, rgba(240,230,200,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 65%, rgba(240,230,200,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 35%, rgba(240,230,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 70%, rgba(240,230,200,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 80%, rgba(240,230,200,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 85%, rgba(240,230,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 30%, rgba(240,230,200,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 75%, rgba(240,230,200,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 90%, rgba(240,230,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 95% 5%, rgba(240,230,200,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 50%, rgba(240,230,200,0.3) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Screens */
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 0.5s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========= TITLE SCREEN ========= */
+  #screen-title {
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .title-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 30%, rgba(123,94,167,0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 50% 20%, rgba(200,169,110,0.08) 0%, transparent 60%);
+  }
+
+  .moon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f8f0d8, #d4c090 60%, #a08040);
+    box-shadow:
+      0 0 40px rgba(200,169,110,0.4),
+      0 0 80px rgba(200,169,110,0.15),
+      inset -15px -10px 30px rgba(0,0,0,0.3);
+    margin-bottom: 8px;
+    animation: moonPulse 4s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes moonPulse {
+    0%, 100% { box-shadow: 0 0 40px rgba(200,169,110,0.4), 0 0 80px rgba(200,169,110,0.15), inset -15px -10px 30px rgba(0,0,0,0.3); }
+    50% { box-shadow: 0 0 60px rgba(200,169,110,0.6), 0 0 120px rgba(200,169,110,0.25), inset -15px -10px 30px rgba(0,0,0,0.3); }
+  }
+
+  .wolf-icon {
+    font-size: 64px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 0 20px rgba(224,92,92,0.5));
+    animation: wolfBreath 3s ease-in-out infinite;
+  }
+
+  @keyframes wolfBreath {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(224,92,92,0.5)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(224,92,92,0.8)); }
+  }
+
+  .title-main {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: var(--moon);
+    text-shadow: 0 0 30px rgba(200,169,110,0.5);
+    position: relative;
+    z-index: 1;
+    margin-top: 12px;
+  }
+
+  .title-sub {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 14px;
+    letter-spacing: 0.5em;
+    color: var(--muted);
+    margin-top: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .title-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 28px auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn-play {
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 20px;
+    letter-spacing: 0.3em;
+    padding: 16px 52px;
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .btn-play::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+
+  .btn-play:active::before { transform: scaleX(1); }
+  .btn-play:active { color: var(--bg); }
+
+  .forest-silhouette {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 160px;
+    background: linear-gradient(to top, #0a0a0f 30%, transparent);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .forest-silhouette svg {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 160px;
+    opacity: 0.7;
+  }
+
+  /* ========= COUNT SCREEN ========= */
+  #screen-count {
+    justify-content: flex-start;
+    padding-top: 60px;
+  }
+
+  .screen-header {
+    text-align: center;
+    margin-bottom: 36px;
+    width: 100%;
+  }
+
+  .screen-label {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .screen-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--moon);
+  }
+
+  .count-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .btn-count {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-count::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(200,169,110,0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn-count:active::after { opacity: 1; }
+  .btn-count:active { border-color: var(--accent); transform: scale(0.97); }
+
+  .count-num {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+  }
+
+  .count-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ========= NAME INPUT SCREEN ========= */
+  #screen-names {
+    justify-content: flex-start;
+    padding-top: 60px;
+  }
+
+  .names-list {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .name-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    transition: border-color 0.2s;
+  }
+
+  .name-row:focus-within { border-color: var(--accent); }
+
+  .name-num {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 28px;
+  }
+
+  .name-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px;
+    flex: 1;
+    caret-color: var(--accent);
+  }
+
+  .name-input::placeholder { color: var(--muted); font-size: 14px; }
+
+  /* ========= MODE SCREEN ========= */
+  #screen-mode {
+    justify-content: center;
+    gap: 0;
+    padding-top: 60px;
+  }
+
+  .mode-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 360px;
+    margin-top: 36px;
+  }
+
+  .mode-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .mode-card.normal-card::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+  .mode-card.job-card::before { background: linear-gradient(90deg, transparent, var(--accent2), transparent); }
+
+  .mode-card:active { transform: scale(0.97); }
+  .mode-card:active::before { opacity: 1; }
+  .mode-card.normal-card:active { border-color: var(--accent); }
+  .mode-card.job-card:active { border-color: var(--accent2); }
+
+  .mode-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+  .mode-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--moon);
+    margin-bottom: 6px;
+  }
+
+  .mode-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  .mode-badge {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+
+  .badge-standard { color: var(--accent); border-color: var(--accent); }
+  .badge-coming { color: var(--accent2); border-color: var(--accent2); opacity: 0.7; }
+
+  /* ========= BUTTONS ========= */
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    padding: 15px 0;
+    width: 100%;
+    max-width: 360px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+
+  .btn-back {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .btn-back:active { color: var(--text); }
+
+  /* Progress dots */
+  .progress-dots {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+
+  .dot.active { background: var(--accent); }
+  .dot.done { background: var(--accent); opacity: 0.4; }
+
+  /* Scroll container for names */
+  .scroll-area {
+    width: 100%;
+    max-width: 380px;
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 10px;
+  }
+
+  .scroll-area::-webkit-scrollbar { width: 3px; }
+  .scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ========= DEAL PHASE ========= */
+  #screen-deal {
+    justify-content: center;
+    padding: 30px 24px;
+    gap: 0;
+  }
+
+  .deal-progress {
+    position: absolute;
+    top: 24px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+  }
+
+  /* --- PASS STATE --- */
+  .pass-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0;
+  }
+
+  .pass-icon {
+    font-size: 52px;
+    margin-bottom: 20px;
+    animation: passFloat 2s ease-in-out infinite;
+  }
+
+  @keyframes passFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .pass-instruction {
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .pass-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--moon);
+    margin-bottom: 6px;
+  }
+
+  .pass-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 44px;
+    letter-spacing: 0.1em;
+  }
+
+  .btn-reveal {
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px;
+    letter-spacing: 0.25em;
+    padding: 15px 40px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .btn-reveal:active {
+    background: var(--accent);
+    color: var(--bg);
+    transform: scale(0.97);
+  }
+
+  /* --- ROLE REVEAL STATE --- */
+  .reveal-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    animation: revealPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes revealPop {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .role-card {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 16px;
+    padding: 32px 24px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 28px;
+    border: 1.5px solid;
+  }
+
+  .role-card.citizen {
+    background: linear-gradient(145deg, #1a2a1a, #121a12);
+    border-color: #4a8a4a;
+    box-shadow: 0 0 40px rgba(74,138,74,0.15);
+  }
+
+  .role-card.solo {
+    background: linear-gradient(145deg, #0e2030, #0a1820);
+    border-color: #38c8e0;
+    box-shadow: 0 0 40px rgba(56,200,224,0.15);
+  }
+
+  .role-card.wolf {
+    background: linear-gradient(145deg, #2a1010, #1a0a0a);
+    border-color: var(--wolf);
+    box-shadow: 0 0 40px rgba(224,92,92,0.2);
+  }
+
+  .role-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .role-card.citizen::before { background: linear-gradient(90deg, transparent, #4a8a4a, transparent); }
+  .role-card.wolf::before    { background: linear-gradient(90deg, transparent, var(--wolf), transparent); }
+  .role-card.solo::before    { background: linear-gradient(90deg, transparent, #38c8e0, transparent); }
+
+  .role-emoji { font-size: 56px; margin-bottom: 14px; display: block; }
+
+  .role-tag {
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+
+  .role-card.citizen .role-tag { background: rgba(74,138,74,0.2);    color: #7ac07a; border: 1px solid rgba(74,138,74,0.4); }
+  .role-card.wolf .role-tag    { background: rgba(224,92,92,0.15);   color: #e08080; border: 1px solid rgba(224,92,92,0.3); }
+  .role-card.solo .role-tag    { background: rgba(56,200,224,0.15);  color: #56c8e0; border: 1px solid rgba(56,200,224,0.3); }
+
+  .role-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 30px;
+    font-weight: 800;
+    margin: 8px 0 14px;
+    display: block;
+  }
+
+  .role-card.citizen .role-name { color: #d0f0d0; }
+  .role-card.wolf .role-name    { color: #ffd0d0; }
+  .role-card.solo .role-name    { color: #d0f0ff; }
+
+  .role-desc-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  .role-warning {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+    padding: 10px 16px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    max-width: 300px;
+    text-align: center;
+  }
+
+  .btn-confirm {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px;
+    letter-spacing: 0.2em;
+    padding: 15px 0;
+    width: 100%;
+    max-width: 300px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-confirm:active {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(0.97);
+  }
+
+  /* ========= DAY PHASE ========= */
+  #screen-day {
+    justify-content: flex-start;
+    padding-top: 44px;
+  }
+
+  .phase-header {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 28px;
+  }
+
+  .phase-day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(200,169,110,0.1);
+    border: 1px solid rgba(200,169,110,0.3);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .phase-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--moon);
+  }
+
+  .phase-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .alive-section {
+    width: 100%;
+    max-width: 380px;
+    margin-bottom: 24px;
+  }
+
+  .alive-section-label {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .alive-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .alive-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 14px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .alive-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #4a8;
+    display: inline-block;
+  }
+
+  .day-note {
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  /* ========= VOTE PHASE ========= */
+  #screen-vote {
+    justify-content: flex-start;
+    padding-top: 44px;
+  }
+
+  .voter-pass {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .voter-instruction {
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .voter-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--moon);
+    margin-bottom: 4px;
+  }
+
+  .voter-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .vote-targets {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .btn-vote-target {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+  }
+
+  .btn-vote-target:active {
+    border-color: var(--wolf);
+    background: rgba(224,92,92,0.08);
+    transform: scale(0.98);
+  }
+
+  .vote-target-icon {
+    font-size: 20px;
+    width: 32px;
+    text-align: center;
+  }
+
+  .btn-vote-skip {
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 13px 0;
+    width: 100%;
+    max-width: 380px;
+    color: var(--muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-vote-skip:active {
+    border-color: var(--muted);
+    color: var(--text);
+  }
+
+  .vote-progress-bar {
+    width: 100%;
+    max-width: 380px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+
+  .vote-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* ========= EXECUTE RESULT ========= */
+  #screen-execute {
+    justify-content: flex-start;
+    text-align: center;
+    padding: 40px 24px;
+    overflow-y: auto;
+  }
+
+  .execute-icon { font-size: 60px; margin-bottom: 20px; }
+
+  .execute-label {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .execute-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--moon);
+    margin-bottom: 8px;
+  }
+
+  .execute-role-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .execute-role-badge.wolf { background: rgba(224,92,92,0.15); color: #e08080; border: 1px solid rgba(224,92,92,0.3); }
+  .execute-role-badge.citizen { background: rgba(74,138,74,0.15); color: #7ac07a; border: 1px solid rgba(74,138,74,0.3); }
+
+  .execute-votes-summary {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 36px;
+    line-height: 1.7;
+  }
+
+  .execute-divider {
+    width: 50px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 auto 28px;
+  }
+
+  .no-execute-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 28px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 320px;
+  }
+
+  /* ========= DEAL ALL DONE STATE ========= */
+  .alldone-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .alldone-icon { font-size: 52px; margin-bottom: 20px; }
+  .alldone-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--moon);
+    margin-bottom: 10px;
+  }
+  .alldone-sub { font-size: 14px; color: var(--muted); margin-bottom: 40px; line-height: 1.6; }
+
+  /* ========= NIGHT PHASE ========= */
+  #screen-night { justify-content: center; padding: 30px 24px; }
+  #screen-morning { justify-content: flex-start; text-align: center; padding: 40px 24px; overflow-y: auto; }
+
+  .night-progress {
+    position: absolute; top: 20px; left: 0; right: 0;
+    text-align: center; font-size: 12px; letter-spacing: 0.3em; color: var(--muted);
+  }
+
+  .night-pass-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%; text-align: center;
+  }
+
+  .night-icon { font-size: 52px; margin-bottom: 16px; animation: passFloat 2s ease-in-out infinite; }
+
+  .night-pass-label { font-size: 12px; letter-spacing: 0.35em; color: var(--muted); margin-bottom: 8px; }
+  .night-pass-name {
+    font-family: 'Shippori Mincho', serif; font-size: 30px; font-weight: 700;
+    color: var(--moon); margin-bottom: 4px;
+  }
+  .night-pass-sub { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+  .night-caution {
+    font-size: 12px; color: #c05050; margin-bottom: 36px;
+    padding: 8px 16px; border: 1px dashed rgba(224,92,92,0.3); border-radius: 6px;
+  }
+
+  .btn-night-reveal {
+    background: transparent; border: 1.5px solid rgba(200,169,110,0.5);
+    color: var(--accent); font-family: 'Shippori Mincho', serif;
+    font-size: 15px; letter-spacing: 0.25em; padding: 14px 36px; border-radius: 4px;
+    cursor: pointer; transition: all 0.2s; width: 100%; max-width: 280px;
+  }
+  .btn-night-reveal:active { background: rgba(200,169,110,0.1); transform: scale(0.97); }
+
+  .night-action-wrap {
+    display: none; flex-direction: column; align-items: center; width: 100%;
+    animation: revealPop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .night-role-header { text-align: center; margin-bottom: 20px; }
+  .night-role-emoji { font-size: 36px; margin-bottom: 8px; display: block; }
+  .night-role-label { font-size: 10px; letter-spacing: 0.4em; color: var(--muted); margin-bottom: 4px; }
+  .night-action-title {
+    font-family: 'Shippori Mincho', serif; font-size: 20px; font-weight: 600; color: var(--moon);
+  }
+
+  .night-targets {
+    width: 100%; max-width: 340px; display: flex;
+    flex-direction: column; gap: 10px; margin-bottom: 16px;
+  }
+
+  .btn-night-target {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; text-align: left; cursor: pointer; font-size: 15px;
+    color: var(--text); font-family: 'Noto Sans JP', sans-serif;
+    display: flex; align-items: center; gap: 12px; transition: all 0.2s; width: 100%;
+  }
+  .btn-night-target.wolf-t:active  { border-color: var(--wolf); background: rgba(224,92,92,0.08); transform: scale(0.98); }
+  .btn-night-target.seer-t:active  { border-color: var(--accent2); background: rgba(123,94,167,0.08); transform: scale(0.98); }
+  .btn-night-target.guard-t:active { border-color: #4a8a4a; background: rgba(74,138,74,0.08); transform: scale(0.98); }
+
+  /* Math */
+  .math-wrap { width: 100%; max-width: 300px; text-align: center; }
+  .math-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .math-equation {
+    font-family: 'Shippori Mincho', serif; font-size: 52px; font-weight: 800;
+    color: var(--moon); margin-bottom: 28px; letter-spacing: 0.1em;
+  }
+  .math-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn-math {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 0; font-family: 'Shippori Mincho', serif; font-size: 28px;
+    font-weight: 700; color: var(--text); cursor: pointer; transition: all 0.15s;
+  }
+  .btn-math:active { transform: scale(0.94); }
+  .btn-math.correct { border-color: #4a8a4a; background: rgba(74,138,74,0.12); color: #7ac07a; }
+  .btn-math.wrong { animation: shake 0.35s ease; border-color: var(--wolf); color: #e08080; }
+
+  @keyframes shake {
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-6px); }
+    60%{ transform: translateX(6px); }
+  }
+
+  /* Seer / Medium result */
+  .seer-result-box {
+    width: 100%; max-width: 300px; border-radius: 12px; padding: 24px;
+    text-align: center; margin-bottom: 16px; border: 1.5px solid;
+    animation: revealPop 0.3s ease;
+  }
+  .seer-result-box.wolf    { background: rgba(224,92,92,0.08);  border-color: rgba(224,92,92,0.4); }
+  .seer-result-box.citizen { background: rgba(74,138,74,0.08);  border-color: rgba(74,138,74,0.4); }
+  .seer-result-box.solo    { background: rgba(56,180,220,0.08);  border-color: rgba(56,180,220,0.4); }
+  .seer-result-name { font-family: 'Shippori Mincho', serif; font-size: 22px; font-weight: 700; color: var(--moon); margin-bottom: 8px; }
+  .seer-result-role { font-size: 16px; font-weight: 600; }
+  .seer-result-box.wolf    .seer-result-role { color: #e08080; }
+  .seer-result-box.citizen .seer-result-role { color: #7ac07a; }
+  .seer-result-box.solo    .seer-result-role { color: #56c8e0; }
+
+  /* Morning */
+  .morning-icon { font-size: 56px; margin-bottom: 16px; }
+  .morning-label { font-size: 11px; letter-spacing: 0.4em; color: var(--muted); margin-bottom: 8px; }
+  .morning-title {
+    font-family: 'Shippori Mincho', serif; font-size: 28px; font-weight: 700;
+    color: var(--moon); margin-bottom: 24px;
+  }
+  .morning-victim-card {
+    width: 100%; max-width: 300px;
+    background: linear-gradient(145deg, #2a1010, #1a0808);
+    border: 1.5px solid rgba(224,92,92,0.4); border-radius: 12px;
+    padding: 18px; margin-bottom: 12px;
+  }
+  .morning-victim-name { font-family: 'Shippori Mincho', serif; font-size: 28px; font-weight: 700; color: #ffd0d0; margin-bottom: 8px; }
+  .morning-victim-role { font-size: 14px; color: rgba(224,92,92,0.8); }
+  .morning-safe-card {
+    width: 100%; max-width: 300px;
+    background: rgba(74,138,74,0.08); border: 1.5px solid rgba(74,138,74,0.3);
+    border-radius: 12px; padding: 20px; margin-bottom: 24px;
+    font-size: 14px; color: #7ac07a; line-height: 1.6;
+  }
+  .morning-divider { width: 50px; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 auto 24px; }
+
+  /* ========= LANG TOGGLE ========= */
+  .lang-toggle {
+    position: absolute; top: 14px; right: 14px; z-index: 300;
+    display: flex; gap: 6px;
+  }
+  .lang-btn {
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 10px; font-size: 11px;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+    font-family: 'Noto Sans JP', sans-serif; letter-spacing: 0.05em;
+  }
+  .lang-btn.active { border-color: var(--accent); color: var(--accent); }
+
+
+  /* ========= ROLE GUIDE ========= */
+  #screen-guide {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: #000;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0;
+    min-height: 100dvh;
+    animation: none;
+  }
+  #screen-guide.active { display: flex; }
+
+  .guide-subtitle {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(22px, 5vw, 36px);
+    font-weight: 700;
+    color: #c8c840;
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+  .guide-header {
+    text-align: center;
+    padding: 12px 60px 6px;
+    flex-shrink: 0;
+  }
+  .guide-role-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+  }
+  .guide-role-name.wolf-name    { color: #e05050; }
+  .guide-role-name.citizen-name { color: #7ac07a; }
+  .guide-role-name.solo-name    { color: #56c8e0; }
+
+  .guide-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .guide-illust {
+    flex: 0 0 42%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+  }
+  .guide-illust img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+  }
+  .guide-illust-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 80px;
+    opacity: 0.3;
+  }
+
+  .guide-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 20px 16px 8px;
+    overflow-y: auto;
+  }
+  .guide-tag {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    margin-bottom: 14px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    align-self: flex-start;
+  }
+  .guide-tag.wolf-tag    { background: rgba(224,80,80,0.15); color: #e08080; border: 1px solid rgba(224,80,80,0.4); }
+  .guide-tag.citizen-tag { background: rgba(74,138,74,0.15); color: #7ac07a; border: 1px solid rgba(74,138,74,0.4); }
+  .guide-tag.solo-tag    { background: rgba(56,200,224,0.15); color: #56c8e0; border: 1px solid rgba(56,200,224,0.4); }
+
+  .guide-desc {
+    font-size: clamp(12px, 3vw, 15px);
+    line-height: 1.9;
+    color: #b8c870;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .guide-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 20px 10px;
+    z-index: 10;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .guide-nav-btn:active { opacity: 1; }
+  .guide-nav-left  { left: 0; }
+  .guide-nav-right { right: 0; }
+  .guide-nav-arrow {
+    width: 0; height: 0;
+    display: block;
+  }
+  .guide-nav-left  .guide-nav-arrow { border-top: 20px solid transparent; border-bottom: 20px solid transparent; border-right: 28px solid #c8a940; }
+  .guide-nav-right .guide-nav-arrow { border-top: 20px solid transparent; border-bottom: 20px solid transparent; border-left:  28px solid #c8a940; }
+
+  .guide-footer {
+    text-align: center;
+    padding: 12px 0 20px;
+    flex-shrink: 0;
+  }
+  .guide-back-btn {
+    background: transparent;
+    border: none;
+    color: #c8a940;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 22px;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    padding: 8px 20px;
+  }
+  .guide-back-btn:active { opacity: 0.7; }
+
+  .guide-counter {
+    font-size: 11px;
+    color: #555;
+    letter-spacing: 0.2em;
+    margin-top: 4px;
+  }
+
+  /* Role button on title */
+  .btn-role-guide {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 300;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+  .btn-role-guide:active { border-color: var(--accent); color: var(--accent); }
+  /* Decorative corner */
+  .corner-deco {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent2) 70%, transparent 100%);
+    opacity: 0.4;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="corner-deco"></div>
+
+<!-- ====== TITLE SCREEN ====== -->
+<div id="screen-title" class="screen active">
+  <div class="title-bg"></div>
+  <button class="btn-role-guide" id="btn-role-guide" onclick="openGuide()">📖 役職</button>
+  <div class="lang-toggle"><button class="lang-btn active" id="btn-ja" onclick="setLang('ja')">日本語</button><button class="lang-btn" id="btn-en" onclick="setLang('en')">English</button></div>
+
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:1vh;width:100%;position:relative;z-index:1;">
+    <div class="moon"></div>
+    <div class="wolf-icon">🐺</div>
+    <h1 class="title-main">人狼</h1>
+    <p class="title-sub">JINRO — 夜の村</p>
+    <div class="title-divider"></div>
+    <button class="btn-play" onclick="unlockAudio(); showScreen('count')" data-i18n="play">プ　レ　イ</button>
+  </div>
+
+  <div class="forest-silhouette">
+    <svg viewBox="0 0 400 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,160 L0,100 L15,85 L25,95 L35,65 L45,80 L55,50 L65,70 L75,40 L85,60 L95,30 L105,55 L115,20 L125,50 L135,35 L145,65 L155,25 L165,55 L175,38 L185,68 L195,15 L205,45 L215,28 L225,58 L235,18 L245,48 L255,32 L265,62 L275,42 L285,72 L295,30 L305,60 L315,45 L325,75 L335,55 L345,85 L355,65 L365,90 L375,70 L385,95 L400,80 L400,160 Z" fill="#0a0a0f"/>
+      <path d="M0,160 L0,120 L20,105 L40,115 L60,90 L80,100 L100,80 L120,95 L140,75 L160,90 L180,70 L200,85 L220,68 L240,82 L260,72 L280,88 L300,76 L320,92 L340,80 L360,95 L380,85 L400,100 L400,160 Z" fill="#0d0d14" opacity="0.9"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ====== COUNT SCREEN ====== -->
+<div id="screen-count" class="screen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="screen-header">
+    <p class="screen-label" data-i18n="step1_label">Step 1</p>
+    <h2 class="screen-title" data-i18n="step1_title">人数を選ぶ</h2>
+  </div>
+
+  <div class="count-grid">
+    <button class="btn-count" onclick="selectCount(4)"><span class="count-num">4</span><span class="count-label" data-i18n="count_play">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(5)"><span class="count-num">5</span><span class="count-label" data-i18n="count_play">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(6)"><span class="count-num">6</span><span class="count-label" data-i18n="count_play">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(7)"><span class="count-num">7</span><span class="count-label" data-i18n="count_play">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(8)"><span class="count-num">8</span><span class="count-label" data-i18n="count_play">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(9)"><span class="count-num">9</span><span class="count-label" data-i18n="count_play">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(10)" style="grid-column: span 2;"><span class="count-num">10</span><span class="count-label" data-i18n="count_play">人でプレイ</span></button>
+  </div>
+
+  <button class="btn-back" onclick="showScreen('title')" data-i18n="back">← 戻る</button>
+</div>
+
+<!-- ====== NAMES SCREEN ====== -->
+<div id="screen-names" class="screen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="screen-header">
+    <p class="screen-label" data-i18n="step2_label">Step 2</p>
+    <h2 class="screen-title" data-i18n="step2_title">名前を入力</h2>
+  </div>
+
+  <div class="scroll-area">
+    <div class="names-list" id="names-list"></div>
+  </div>
+
+  <button class="btn-primary" onclick="goToMode()" data-i18n="next">次へ →</button>
+  <button class="btn-back" onclick="unlockAudio(); showScreen('count')" data-i18n="back">← 戻る</button>
+</div>
+
+<!-- ====== MODE SCREEN ====== -->
+<div id="screen-mode" class="screen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+  </div>
+
+  <div class="screen-header">
+    <p class="screen-label" data-i18n="step3_label">Step 3</p>
+    <h2 class="screen-title" data-i18n="step3_title">モードを選ぶ</h2>
+  </div>
+
+  <div class="mode-cards">
+    <button class="mode-card normal-card" onclick="startGame('normal')">
+      <span class="mode-badge badge-standard">STANDARD</span>
+      <span class="mode-icon">🌕</span>
+      <div class="mode-name">ノーマルモード</div>
+      <div class="mode-desc">普通の人狼。村人・人狼・占い師・霊媒師・ボディーガード・裏切り者が出てくる。</div>
+    </button>
+
+    <button class="mode-card job-card" onclick="startGame('job')">
+      <span class="mode-badge badge-coming">JOB MODE</span>
+      <span class="mode-icon">🔮</span>
+      <div class="mode-name">ジョブモード</div>
+      <div class="mode-desc">村人陣営の役職がさらに増え、自己中心の個人陣営も出てくる。</div>
+    </button>
+  </div>
+
+  <button class="mode-card" style="border-color:#e0a020;text-align:left;padding:24px 20px;width:100%;max-width:360px;cursor:pointer;background:var(--surface);border-radius:12px;border-width:1.5px;position:relative;overflow:hidden;" onclick="startGame('ffa')">
+      <span class="mode-badge" style="background:rgba(224,160,32,0.15);color:#e0c060;border:1px solid rgba(224,160,32,0.3);font-size:9px;letter-spacing:.3em;padding:3px 8px;border-radius:20px;">FREE FOR ALL</span>
+      <span class="mode-icon">🎭</span>
+      <div class="mode-name">フリー・フォー・オール</div>
+      <div class="mode-desc">自分の役職を自分で選べる。どんな村になるかはプレイヤー次第。</div>
+    </button>
+  <button class="btn-back" onclick="showScreen('names')" style="margin-top:20px;" data-i18n="back">← 戻る</button>
+</div>
+
+<!-- ====== DEAL PHASE ====== -->
+<div id="screen-deal" class="screen">
+  <div class="deal-progress" id="deal-progress"></div>
+
+  <!-- PASS STATE: ask player to take phone -->
+  <div class="pass-state" id="deal-pass">
+    <div class="pass-icon">📱</div>
+    <p class="pass-instruction" data-i18n="deal_pass_inst">スマホを渡してください</p>
+    <p class="pass-name" id="deal-player-name"></p>
+    <p class="pass-sub" data-i18n="deal_pass_to">さんへ</p>
+    <button class="btn-reveal" onclick="revealRole()" data-i18n="deal_tap">タップして役職を確認</button>
+  </div>
+
+  <!-- ROLE REVEAL STATE -->
+  <div class="reveal-state" id="deal-reveal">
+    <div class="role-card" id="deal-role-card">
+      <span class="role-tag" id="deal-role-tag"></span>
+      <span class="role-emoji" id="deal-role-emoji"></span>
+      <span class="role-name" id="deal-role-name"></span>
+      <p class="role-desc-text" id="deal-role-desc"></p>
+    </div>
+    <p class="role-warning">⚠️ 他の人には見せないでください</p>
+    <button class="btn-confirm" onclick="confirmRole()" data-i18n="deal_confirmed">確認しました　→</button>
+  </div>
+
+  <!-- ALL DONE STATE -->
+  <div class="alldone-state" id="deal-alldone">
+    <div class="alldone-icon">🌙</div>
+    <p class="alldone-title">全員の配布が完了</p>
+    <p class="alldone-sub">それぞれの役職を胸に秘め、<br>議論を始めましょう。</p>
+    <button class="btn-primary" style="max-width:300px;" onclick="startDayPhase()">昼フェーズへ　→</button>
+  </div>
+</div>
+
+<!-- ====== DAY PHASE ====== -->
+<div id="screen-day" class="screen">
+  <div class="phase-header">
+    <div class="phase-day-badge">☀️ <span id="day-badge-text"></span></div>
+    <h2 class="phase-title" id="day-title"></h2>
+    <p class="phase-sub" id="day-subtitle"></p>
+  </div>
+
+  <div class="alive-section">
+    <p class="alive-section-label" data-i18n="alive_label">▸ 生存者</p>
+    <div class="alive-chips" id="day-alive-chips"></div>
+  </div>
+
+  <div class="day-note" id="day-note"></div>
+
+  <button class="btn-primary" style="max-width:340px;" id="day-next-btn" onclick="dayNextPhase()"></button>
+</div>
+
+<!-- ====== VOTE PHASE ====== -->
+<div id="screen-vote" class="screen">
+  <div class="phase-header">
+    <div class="phase-day-badge">🗳️ 投票フェーズ</div>
+    <h2 class="phase-title">誰に投票する？</h2>
+  </div>
+
+  <div class="vote-progress-bar">
+    <div class="vote-progress-fill" id="vote-progress-fill"></div>
+  </div>
+
+  <div class="voter-pass">
+    <p class="voter-instruction">スマホを渡してください</p>
+    <p class="voter-name" id="vote-voter-name"></p>
+    <p class="voter-sub" data-i18n="vote_turn">が投票します</p>
+  </div>
+
+  <div class="vote-targets" id="vote-targets"></div>
+  <button class="btn-vote-skip" onclick="castVote(null)" data-i18n="vote_skip">— 棄権する —</button>
+</div>
+
+<!-- ====== EXECUTE RESULT ====== -->
+<div id="screen-execute" class="screen">
+  <div id="execute-content"></div>
+  <button class="btn-primary" style="max-width:300px;" id="execute-next-btn" onclick="afterExecute()"></button>
+</div>
+
+<!-- ====== NIGHT PHASE ====== -->
+<div id="screen-night" class="screen">
+  <div class="night-progress" id="night-progress"></div>
+
+  <div class="night-pass-wrap" id="night-pass-wrap">
+    <div class="night-icon">🌙</div>
+    <p class="night-pass-label" data-i18n="night_pass">スマホを渡してください</p>
+    <p class="night-pass-name" id="night-player-name"></p>
+    <p class="night-pass-sub" data-i18n="night_to">さんへ</p>
+    <p class="night-caution" id="night-caution" data-i18n="night_caution">⚠️ 他の人は画面を見ないでください</p>
+    <button class="btn-night-reveal" onclick="showNightAction()" data-i18n="night_tap">タップして確認</button>
+  </div>
+
+  <div class="night-action-wrap" id="night-action-wrap">
+    <div class="night-role-header">
+      <span class="night-role-emoji" id="night-action-emoji"></span>
+      <p class="night-role-label" id="night-action-label"></p>
+      <p class="night-action-title" id="night-action-title"></p>
+    </div>
+    <div id="night-action-content"></div>
+  </div>
+</div>
+
+<!-- ====== MORNING ====== -->
+<div id="screen-morning" class="screen">
+  <div id="morning-content"></div>
+  <button class="btn-primary" style="max-width:300px;margin-top:8px;" id="morning-next-btn"></button>
+</div>
+
+<!-- ====== VICTORY ====== -->
+<div id="screen-victory" class="screen" style="justify-content:center;text-align:center;padding:40px 24px;">
+  <div id="victory-content"></div>
+  <button class="btn-primary" style="max-width:300px;margin-top:8px;" onclick="location.reload()" data-i18n="play_again">もう一度遊ぶ</button>
+</div>
+
+<script>
+
+// ─── i18n ────────────────────────────────────────────
+let currentLang = 'ja';
+
+const TRANSLATIONS = {
+  ja: {
+    play: 'プ　レ　イ',
+    count_play: '人でプレイ',
+    step1_label: 'Step 1', step1_title: '人数を選ぶ',
+    step2_label: 'Step 2', step2_title: '名前を入力',
+    step3_label: 'Step 3', step3_title: 'モードを選ぶ',
+    // Roles
+    wolf_name:'人狼', wolf_tag:'人狼陣営',
+    wolf_desc:'毎晩村人を一人消せます。正体を隠し処刑を逃れましょう。村人が人狼と同数以下で人狼の勝利。',
+    traitor_name:'裏切り者', traitor_tag:'人狼陣営',
+    traitor_desc:'人狼陣営の市民。能力なし。占いでは村人陣営と出ます。人狼が全滅すると負け。',
+    citizen_name:'市民', citizen_tag:'村人陣営',
+    citizen_desc:'特殊能力なし。議論と推理で人狼を見つけましょう。全ての人狼を追放すれば村人の勝利。',
+    seer_name:'占い師', seer_tag:'村人陣営',
+    seer_desc:'毎晩一人を選び、村人陣営か人狼陣営かを知れます。情報を活かして村を導きましょう。',
+    bodyguard_name:'ボディーガード', bodyguard_tag:'村人陣営',
+    bodyguard_desc:'毎晩一人（自分以外）を人狼の襲撃から守れます。',
+    medium_name:'霊媒師', medium_tag:'村人陣営',
+    medium_desc:'死亡したプレイヤーの陣営を調べられます。一人につき一回のみ有効。',
+    teru_name:'てるてる坊主', teru_tag:'個人陣営',
+    teru_desc:'投票で処刑されると単独勝ち＆ゲームから退場。夜に殺されたら普通にリタイア。夜は市民と同じ。',
+    cursed_name:'狼憑き', cursed_tag:'村人陣営',
+    cursed_desc:'普通の市民だが、占われると人狼陣営と判定される。警察に狙われても死ぬ。夜は市民と同じ。',
+    police_name:'警察', police_tag:'村人陣営',
+    police_desc:'毎晩一人を狙える。人狼・裏切り者・狼憑きを狙えば成功。それ以外を狙うと自分が死ぬ。棄権可。',
+    tanaka_name:'田中', tanaka_tag:'村人陣営',
+    tanaka_desc:'昼になると「田中さんは村人陣営です」と全員に公表される。夜は市民と同じ。',
+    copy_name:'コピー', copy_tag:'無陣営',
+    copy_desc:'毎晩、死んだ人の役職を好きに引き継げる。引き継いだ瞬間からその陣営になる。棄権も可。',
+    gambler_name:'ギャンブラー', gambler_tag:'個人陣営',
+    gambler_desc:'夜に誰かを指名。指名した人の陣営が勝てば単独勝ち。指名した人が死んだら勝利条件を失う。',
+    dentist_name:'歯医者', dentist_tag:'村人陣営',
+    dentist_desc:'毎晩一人の虫歯率を見れる。村人陣営は0〜60%、人狼陣営・狼憑きは45〜100%。',
+    politician_name:'政治家', politician_tag:'村人陣営',
+    politician_desc:'自分の投票が3票分の重みを持つ（指名した人が処刑されやすくなる）。夜は市民と同じ。',
+    wolfboy_name:'オオカミ少年', wolfboy_tag:'村人陣営',
+    wolfboy_desc:'2日目の夜、人狼陣営が全員わかる。ただし人狼側にも自分がオオカミ少年だとばれる。',
+    bomber_name:'爆弾魔', bomber_tag:'村人陣営',
+    bomber_desc:'投票で処刑されるとランダムで1人を道連れにする。夜は市民と同じ。',
+    god_name:'神', god_tag:'個人陣営',
+    god_desc:'夜に全員の役職を確認できる。ゲーム終了時に生きていれば単独勝ち（他の勝者を上書き）。',
+    fireBoy_name:'ファイヤーボーイ', fireBoy_tag:'個人陣営',
+    fireBoy_desc:'2日目以降の昼に1/10の確率で単独勝ち。複数が同時に発動した場合は全員勝ち。',
+    // Night
+    night_pass: 'スマホを渡してください',
+    night_to: 'さんへ',
+    night_caution: '⚠️ 他の人は画面を見ないでください',
+    night_tap: 'タップして確認',
+    night_confirmed: '確認しました　→',
+    night_wolf_title: '今夜、誰を襲いますか？',
+    night_seer_title: '今夜、誰を占いますか？',
+    night_guard_title: '今夜、誰を守りますか？（自分以外）',
+    night_medium_title: '誰の霊を呼びますか？',
+    night_medium_none: '今は調べられる相手がいません',
+    night_police_title: '今夜、誰を処刑しますか？\n（外れると自分が死ぬ）',
+    night_police_skip: '— 今夜は動かない —',
+    night_copy_title: '誰の役職を引き継ぎますか？',
+    night_copy_none: 'まだ誰も死んでいません',
+    night_copy_skip: '— 今夜は引き継がない —',
+    night_gambler_title: '誰が勝つと思いますか？\n（役職は見えません）',
+    night_gambler_done: 'に賭けました！',
+    night_gambler_secret: '⚠️ 賭けの相手には言わないでください',
+    night_dentist_title: '誰の虫歯率を調べますか？',
+    night_wolfboy_title: '人狼陣営が判明しました',
+    night_wolfboy_none: '1日目の夜は情報なし',
+    night_wolfboy_warn: '⚠️ 人狼にもあなたの正体がばれています',
+    night_god_title: '全員の役職が見えます',
+    night_god_warn: '⚠️ 生き残ればあなたの勝利です',
+    night_math_title: '問題を解いてください',
+    alive_label: '▸ 生存者',
+    night_math_desc: 'あなたの番です。\n答えを選んで次の人へ渡しましょう。',
+    night_secret: '⚠️ この結果は胸に秘めてください',
+    wolf_faction: '人狼陣営', village_faction: '村人陣営',
+    wolfboy_reveal_title: '人狼陣営が判明しました',
+    wolfboy_wolf_warn: '⚠️ 人狼にもあなたの正体がばれています',
+    copy_inherited: 'あなたが受け継いだ役職は…',
+    copy_became: 'あなたは {tag} になりました！',
+    copy_secret: '⚠️ この結果は胸に秘めてください',
+    // Morning
+    morning_night: '第 {n} 夜が明けた',
+    morning_title: '朝の報告',
+    morning_victim: '犠牲者',
+    morning_protected: '🛡️ ボディーガードが守ったおかげで、今夜は誰も犠牲になりませんでした。',
+    morning_safe: '☀️ 今夜は誰も犠牲になりませんでした。',
+    morning_next: '第 {n} 日目へ →',
+    // Day
+    day_badge: '第 {n} 日目',
+    day_title: '昼 — 議論の時間',
+    day_sub_first: '今日は投票なし。自由に話し合おう。',
+    day_sub: '議論の後、投票で一人を処刑する。',
+    day_note_first: '📜 初日は投票なし。全員で自由に議論し、怪しい人物を探りましょう。準備ができたら夜フェーズへ進んでください。',
+    day_note: '📜 議論が終わったら「投票へ」を押して、処刑する人物を決定します。',
+    day_tanaka: '🙋 田中さんは村人陣営です：',
+    day_to_night: '夜フェーズへ →',
+    day_to_vote: '投票へ →',
+    day_fireBoy_win: '🔥 {names} のファイヤーボーイが炎上！単独勝ち！',
+    day_result: '結果を見る',
+    // Vote
+    vote_turn: 'が投票します',
+    vote_skip: '— 棄権する —',
+    // Execute
+    exec_result: '処刑結果',
+    exec_abstain_most: '棄権が最多（{n}票）でした。',
+    exec_all_abstain: '全員が棄権しました。',
+    exec_tie: 'が同票でした。',
+    exec_no_exec: '今日は誰も処刑されませんでした。',
+    exec_to_night: '夜フェーズへ →',
+    exec_label: '処刑',
+    exec_bomber: '💣 爆弾魔の道連れ！\n{name} も巻き込まれた…',
+    exec_teru: 'てるてる坊主の単独勝ち！\n{name} はゲームから退場します。\n\nゲームは残ったプレイヤーで続行します。',
+    // Deal
+    deal_pass_inst: 'スマホを渡してください',
+    deal_tap: 'タップして役職を確認',
+    deal_pass_to: 'さんへ渡してください',
+    deal_confirmed: '確認しました　→',
+    deal_done: '配布完了',
+    deal_start: 'ゲームを始める →',
+    deal_warn: '⚠️ 他の人には見せないでください',
+    deal_alldone_title: 'みんなの役職が配布されました',
+    deal_alldone_sub: '全員に端末を渡しましたか？\n準備ができたらゲームを始めましょう。',
+    // FFA
+    ffa_pick: '役職を選んでください',
+    ffa_warn: '⚠️ 他の人には見せないでください',
+    // Victory
+    gameover: 'GAME OVER',
+    village_win: '村人陣営の勝利！',
+    wolf_win: '人狼陣営の勝利！',
+    solo_win: '単独勝利！',
+    village_win_desc: '全ての人狼を追放しました！\n\n🐺 人狼：{names}',
+    wolf_win_desc: '村が人狼に支配されました…\n\n🐺 人狼：{names}',
+    play_again: 'もう一度遊ぶ',
+    // Peace endings
+    peace: 'この村は平和だった...',
+    same_clan: '全員同族だった...',
+    same_clan_wolf: 'この村には同族しかいなかった...',
+    same_clan_wolf_sub: '村人が一人もいませんでした。',
+    no_faction: 'みんな団結せず何も起こらなかった...',
+    peace_sub: '人狼が一人もいませんでした。',
+    same_clan_sub: '村人が一人もいませんでした。',
+    no_faction_sub: '個人陣営しかいませんでした。',
+    try_again: 'もう一度',
+    // Mode screen
+    mode_normal_name: 'ノーマルモード',
+    mode_normal_badge: 'STANDARD',
+    mode_normal_desc: '普通の人狼。村人・人狼・占い師・霊媒師・ボディーガード・裏切り者が出てくる。',
+    mode_job_name: 'ジョブモード',
+    mode_job_badge: 'JOB MODE',
+    mode_job_desc: '村人陣営の役職がさらに増え、自己中心の個人陣営も出てくる。',
+    mode_ffa_name: 'フリー・フォー・オール',
+    mode_ffa_badge: 'FREE FOR ALL',
+    mode_ffa_desc: '自分の役職を自分で選べる。どんな村になるかはプレイヤー次第。',
+    back: '← 戻る',
+    next: '次へ →',
+  },
+  en: {
+    play: "P  L  A  Y",
+    count_play: " Players",
+    step1_label: "Step 1", step1_title: "Choose Players",
+    step2_label: "Step 2", step2_title: "Enter Names",
+    step3_label: "Step 3", step3_title: "Choose Mode",
+    wolf_name:"Werewolf", wolf_tag:"Wolf Team",
+    wolf_desc:"Each night, eliminate one villager. Hide your identity and avoid execution. Wolf team wins when all villagers are gone.",
+    traitor_name:"Traitor", traitor_tag:"Wolf Team",
+    traitor_desc:"A wolf-aligned citizen with no ability. Appears as villager to the Seer. Loses if all wolves are eliminated.",
+    citizen_name:"Citizen", citizen_tag:"Village Team",
+    citizen_desc:"No special ability. Find the wolves through discussion and vote to execute them. Village wins when all wolves are gone.",
+    seer_name:"Seer", seer_tag:"Village Team",
+    seer_desc:"Each night, investigate one player to learn if they are Village or Wolf aligned. Use your knowledge to guide the village.",
+    bodyguard_name:"Bodyguard", bodyguard_tag:"Village Team",
+    bodyguard_desc:"Each night, protect one player (not yourself) from wolf attacks.",
+    medium_name:"Medium", medium_tag:"Village Team",
+    medium_desc:"Investigate the faction of dead players. Can only investigate each player once.",
+    teru_name:"Teru-Teru", teru_tag:"Solo",
+    teru_desc:"Win solo and exit if executed by vote. Eliminated normally if killed at night. Acts as Citizen at night.",
+    cursed_name:"Wolf-Cursed", cursed_tag:"Village Team",
+    cursed_desc:"Appears as Wolf faction when investigated by the Seer or targeted by the Police. Acts as Citizen at night.",
+    police_name:"Police", police_tag:"Village Team",
+    police_desc:"Each night, target one player. Targeting a wolf or cursed succeeds. Targeting anyone else causes your own death. Can abstain.",
+    tanaka_name:"Tanaka", tanaka_tag:"Village Team",
+    tanaka_desc:"Each day, it is publicly announced that Tanaka is on the Village team. Acts as Citizen at night.",
+    copy_name:"Copycat", copy_tag:"No Faction",
+    copy_desc:"Each night, inherit the role of a dead player. You immediately join their faction. Can abstain.",
+    gambler_name:"Gambler", gambler_tag:"Solo",
+    gambler_desc:"At night, nominate one player. If their faction wins, you win solo. If your nominee dies, you lose your win condition.",
+    dentist_name:"Dentist", dentist_tag:"Village Team",
+    dentist_desc:"Each night, check one player's cavity rate. Village: 0-60%. Wolf & Cursed: 45-100%.",
+    politician_name:"Politician", politician_tag:"Village Team",
+    politician_desc:"Your vote counts as 3x weight (making your target easier to execute). Acts as Citizen at night.",
+    wolfboy_name:"Wolf Boy", wolfboy_tag:"Village Team",
+    wolfboy_desc:"On night 2+, you learn all wolf-aligned players. However, the wolves also learn your identity.",
+    bomber_name:"Bomber", bomber_tag:"Village Team",
+    bomber_desc:"If executed by vote, one random player is taken down with you. Acts as Citizen at night.",
+    god_name:"God", god_tag:"Solo",
+    god_desc:"Each night, view everyone's roles. Win solo if alive when the game ends (overrides other winners).",
+    fireBoy_name:"Fire Boy", fireBoy_tag:"Solo",
+    fireBoy_desc:"From day 2 onward, 1/10 chance to win solo each day. Multiple Fire Boys can trigger simultaneously.",
+    night_pass: "Pass the phone",
+    night_to: "",
+    night_caution: "⚠️ Others must not look at the screen",
+    night_tap: "Tap to reveal",
+    night_confirmed: "Got it  →",
+    night_wolf_title: "Who will you attack tonight?",
+    night_seer_title: "Who will you investigate tonight?",
+    night_guard_title: "Who will you protect tonight? (not yourself)",
+    night_medium_title: "Whose spirit will you summon?",
+    night_medium_none: "No one to investigate yet",
+    night_police_title: "Who will you target tonight?\n(wrong target = you die)",
+    night_police_skip: "— Do nothing tonight —",
+    night_copy_title: "Whose role will you inherit?",
+    night_copy_none: "No one has died yet",
+    night_copy_skip: "— Skip for now —",
+    night_gambler_title: "Who do you think will win?\n(roles are hidden)",
+    night_gambler_done: "— you bet on them!",
+    night_gambler_secret: "⚠️ Keep your bet secret",
+    night_dentist_title: "Who will you examine?",
+    night_wolfboy_title: "Wolf-aligned players revealed",
+    night_wolfboy_none: "No information on night 1",
+    night_wolfboy_warn: "⚠️ The wolves also know you are Wolf Boy",
+    night_god_title: "You can see everyone's roles",
+    night_god_warn: "⚠️ Stay alive to win",
+    night_math_title: "Solve the problem",
+    alive_label: "▸ Survivors",
+    night_math_desc: "Your turn.\nSelect the answer and pass the phone.",
+    night_secret: "⚠️ Keep this result to yourself",
+    wolf_faction: "Wolf Team", village_faction: "Village Team",
+    wolfboy_reveal_title: "Wolf-aligned players revealed",
+    wolfboy_wolf_warn: "⚠️ The wolves also know you are Wolf Boy",
+    copy_inherited: "The role you inherited is…",
+    copy_became: "You are now on the {tag}!",
+    copy_secret: "⚠️ Keep this secret",
+    morning_night: "Night {n} has ended",
+    morning_title: "Morning Report",
+    morning_victim: "Victim",
+    morning_protected: "🛡️ Thanks to the Bodyguard, no one was killed tonight.",
+    morning_safe: "☀️ No one was killed tonight.",
+    morning_next: "Day {n} →",
+    day_badge: "Day {n}",
+    day_title: "Day — Discussion",
+    day_sub_first: "No vote today. Discuss freely.",
+    day_sub: "After discussion, vote to execute someone.",
+    day_note_first: "📜 No vote on day 1. Discuss freely and find suspicious players. Press the button when ready.",
+    day_note: "📜 After discussion, press Vote to decide who to execute.",
+    day_tanaka: "🙋 Tanaka is on the Village Team: ",
+    day_to_night: "Night Phase →",
+    day_to_vote: "Vote →",
+    day_fireBoy_win: "🔥 {names} Fire Boy ignites! Solo win!",
+    day_result: "See Results",
+    vote_turn: "is voting",
+    vote_skip: "— Abstain —",
+    exec_result: "Execution Result",
+    exec_abstain_most: "Abstain had the most votes ({n}).",
+    exec_all_abstain: "Everyone abstained.",
+    exec_tie: " tied.",
+    exec_no_exec: "No one was executed today.",
+    exec_to_night: "Night Phase →",
+    exec_label: "Executed",
+    exec_bomber: "💣 Bomber chain kill!\n{name} was caught in the blast…",
+    exec_teru: "Teru-Teru wins solo!\n{name} exits the game.\n\nThe game continues.",
+    deal_pass_inst: "Pass the phone",
+    deal_tap: "Tap to reveal your role",
+    deal_pass_to: "— pass the phone to them",
+    deal_confirmed: "Got it  →",
+    deal_done: "All distributed",
+    deal_start: "Start Game →",
+    deal_warn: "⚠️ Do not show others",
+    deal_alldone_title: "All roles distributed",
+    deal_alldone_sub: "Has everyone received the phone?\nStart when ready.",
+    ffa_pick: "Choose your role",
+    ffa_warn: "⚠️ Do not show others",
+    gameover: "GAME OVER",
+    village_win: "Village Wins!",
+    wolf_win: "Wolves Win!",
+    solo_win: "Solo Victory!",
+    village_win_desc: "All wolves have been banished!\n\n🐺 Wolves: {names}",
+    wolf_win_desc: "The village has fallen to the wolves…\n\n🐺 Wolves: {names}",
+    play_again: "Play Again",
+    peace: "The village was at peace...",
+    same_clan: "Everyone was the same clan...",
+    same_clan_wolf: "This village was all wolves...",
+    same_clan_wolf_sub: "There were no villagers.",
+    no_faction: "No one cooperated. Nothing happened...",
+    peace_sub: "There were no werewolves.",
+    same_clan_sub: "There were no villagers.",
+    no_faction_sub: "Only solo players were present.",
+    try_again: "Try Again",
+    mode_normal_name: "Normal Mode",
+    mode_normal_badge: "STANDARD",
+    mode_normal_desc: "Classic werewolf. Includes Citizens, Wolves, Seer, Medium, Bodyguard, and Traitor.",
+    mode_job_name: "Job Mode",
+    mode_job_badge: "JOB MODE",
+    mode_job_desc: "More village roles and self-serving solo players join the mix.",
+    mode_ffa_name: "Free For All",
+    mode_ffa_badge: "FREE FOR ALL",
+    mode_ffa_desc: "Choose your own role. What kind of village emerges is up to the players.",
+    back: "← Back",
+    next: "Next →",
+  }
+};
+
+function t(key, vars={}) {
+  let str = (TRANSLATIONS[currentLang] || TRANSLATIONS.ja)[key] || key;
+  Object.entries(vars).forEach(([k,v]) => { str = str.replace('{'+k+'}', v); });
+  return str;
+}
+
+function setLang(lang) {
+  try {
+    currentLang = lang;
+    document.getElementById('btn-ja').classList.toggle('active', lang === 'ja');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    // Update all data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    // Update count labels
+    document.querySelectorAll('.count-label').forEach(el => {
+      el.textContent = t('count_play');
+    });
+    // Update ROLES
+    Object.keys(ROLES).forEach(key => {
+      if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key+'_name']) {
+        ROLES[key].name = t(key+'_name');
+        ROLES[key].tag  = t(key+'_tag');
+        ROLES[key].desc = t(key+'_desc');
+      }
+    });
+    // Update name input placeholders
+    for (let i=1; i<=playerCount; i++) {
+      const el = document.getElementById('name-'+i);
+      if (el) el.placeholder = lang === 'en' ? 'Player '+i+' name' : 'プレイヤー '+i+' の名前';
+    }
+    const rgBtn = document.getElementById('btn-role-guide');
+    if (rgBtn) rgBtn.textContent = lang === 'en' ? '📖 Roles' : '📖 役職';
+    updateModeScreen();
+    if (document.getElementById('screen-day').classList.contains('active')) showDayScreen();
+  } catch(e) { console.warn('i18n error:', e); }
+}
+
+function updateModeScreen() {
+  const modeDescs = document.querySelectorAll('.mode-desc');
+  const modeNames = document.querySelectorAll('.mode-name');
+  if (modeNames[0]) modeNames[0].textContent = t('mode_normal_name');
+  if (modeNames[1]) modeNames[1].textContent = t('mode_job_name');
+  if (modeNames[2]) modeNames[2].textContent = t('mode_ffa_name');
+  if (modeDescs[0]) modeDescs[0].textContent = t('mode_normal_desc');
+  if (modeDescs[1]) modeDescs[1].textContent = t('mode_job_desc');
+  if (modeDescs[2]) modeDescs[2].textContent = t('mode_ffa_desc');
+  // Update count screen labels
+  document.querySelectorAll('.count-label').forEach(el => {
+    el.textContent = t('count_play');
+  });
+}
+
+// ─── State ─────────────────────────────────────────
+let playerCount = 0, currentGameMode = 'normal';
+let playerNames = [], playerRoles = [];
+let alivePlayers = [], deadPlayers = [];
+let mediumInvestigated = new Set();
+let dealIndex = 0, dayCount = 0;
+// Vote
+let voteOrder = [], voteIndex = 0, voteTally = {};
+// Night
+let nightOrder = [], nightIdx = 0;
+let nightWolfVotes = {}, nightProtectedIdx = null, nightPoliceTarget = null;
+let pharmacistPoisons = {}; // pharmacistIdx → {targetIdx, daySet}
+let nightDetectiveActions = []; // [{detective, target, guess}]
+// Special
+let gamblerBets = {};       // gamblerIdx -> targetIdx
+let gamblerLost = new Set();// gamblers whose target died
+let teruExited = new Set(); // teru players who already won & exited
+let copyDone = new Set();   // copy players who already copied
+
+// ─── Role Tables ────────────────────────────────────
+const ROLE_TABLE_NORMAL = {
+  4:  ['wolf','citizen','citizen','citizen'],
+  5:  ['wolf','seer','citizen','citizen','citizen'],
+  6:  ['wolf','wolf','seer','citizen','citizen','citizen'],
+  7:  ['wolf','wolf','seer','bodyguard','citizen','citizen','citizen'],
+  8:  ['wolf','wolf','seer','bodyguard','medium','citizen','citizen','citizen'],
+  9:  ['wolf','wolf','seer','bodyguard','medium','traitor','citizen','citizen','citizen'],
+  10: ['wolf','wolf','wolf','seer','bodyguard','medium','traitor','citizen','citizen','citizen']
+};
+// Job mode faction counts: {v: village, w: wolf, s: solo/none}
+const JOB_COUNTS = {
+  4:{v:2,w:1,s:1}, 5:{v:3,w:1,s:1}, 6:{v:4,w:1,s:1},
+  7:{v:4,w:2,s:1}, 8:{v:5,w:2,s:1}, 9:{v:5,w:3,s:1}, 10:{v:6,w:3,s:1}
+};
+const JOB_VILLAGE_POOL = ['citizen','seer','bodyguard','medium','cursed','police','tanaka','dentist','politician','wolfboy','bomber'];
+const JOB_WOLF_POOL    = ['wolf','traitor','mafia','pharmacist','detective'];
+const JOB_SOLO_POOL    = ['teru','gambler','god','fireBoy','copy'];
+
+function generateJobRoles(n) {
+  const {v,w,s} = JOB_COUNTS[n];
+
+  // Pick from pool, allow repeating 'wolf' if count > pool size
+  function pick(pool, count) {
+    const shuffled = [...pool].sort(()=>Math.random()-0.5);
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      result.push(i < shuffled.length ? shuffled[i] : 'wolf');
+    }
+    return result;
+  }
+
+  // Wolf roles: always at least one real 'wolf'
+  let wolfRoles = pick(JOB_WOLF_POOL, w);
+  if (!wolfRoles.includes('wolf')) wolfRoles[0] = 'wolf';
+
+  const villageRoles = pick(JOB_VILLAGE_POOL, v);
+  const soloRoles    = pick(JOB_SOLO_POOL, s);
+
+  const all = [...wolfRoles, ...villageRoles, ...soloRoles];
+  for (let i=all.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1)); [all[i],all[j]]=[all[j],all[i]];
+  }
+  return all;
+}
+
+// type: 'wolf'=人狼陣営, 'village'=村人陣営, 'solo'=個人陣営, 'none'=無陣営
+const ROLES = {
+  wolf:      {name:'人狼',          tag:'人狼陣営', emoji:'🐺', type:'wolf',
+    desc:'毎晩村人を一人消せます。正体を隠して処刑を逃れましょう。村人が人狼と同数以下で人狼の勝利。'},
+  traitor:   {name:'裏切り者',      tag:'人狼陣営', emoji:'🎭', type:'wolf',
+    desc:'人狼陣営の市民。能力なし。占いでは村人陣営と出ます。人狼が全滅すると負け。'},
+  citizen:   {name:'市民',          tag:'村人陣営', emoji:'🏘️', type:'village',
+    desc:'特殊能力なし。議論と推理で人狼を見つけましょう。全ての人狼を追放すれば村人の勝利。'},
+  seer:      {name:'占い師',        tag:'村人陣営', emoji:'🔮', type:'village',
+    desc:'毎晩一人を選び、村人陣営か人狼陣営かを知れます。情報を活かして村を導きましょう。'},
+  bodyguard: {name:'ボディーガード', tag:'村人陣営', emoji:'🛡️', type:'village',
+    desc:'毎晩一人（自分以外）を人狼の襲撃から守れます。'},
+  medium:    {name:'霊媒師',        tag:'村人陣営', emoji:'🕯️', type:'village',
+    desc:'死亡したプレイヤーの陣営を調べられます。一人につき一回のみ有効。'},
+  // ── Job mode ──
+  teru:      {name:'てるてる坊主',  tag:'個人陣営', emoji:'🎎', type:'solo',
+    desc:'投票で処刑されると単独勝ち＆ゲームから退場。夜に殺されたら普通にリタイア。夜は市民と同じ。'},
+  cursed:    {name:'狼憑き',        tag:'村人陣営', emoji:'🐾', type:'village',
+    desc:'普通の市民だが、占われると人狼陣営と判定される。警察に狙われても死ぬ。夜は市民と同じ。'},
+  police:    {name:'警察',          tag:'村人陣営', emoji:'👮', type:'village',
+    desc:'毎晩一人を狙える。人狼・裏切り者・狼憑きを狙えば成功。それ以外を狙うと自分が死ぬ。棄権可。'},
+  tanaka:    {name:'田中',          tag:'村人陣営', emoji:'🙋', type:'village',
+    desc:'昼になると「田中さんは村人陣営です」と全員に公表される。夜は市民と同じ。'},
+  copy:      {name:'コピー',        tag:'無陣営',   emoji:'🃏', type:'none',
+    desc:'毎晩、死んだ人の役職を好きに引き継げる。引き継いだ瞬間からその陣営になる。棄権も可。'},
+  gambler:   {name:'ギャンブラー',  tag:'個人陣営', emoji:'🎰', type:'solo',
+    desc:'夜に誰かを指名。指名した人の陣営が勝てば単独勝ち。指名した人が死んだら勝利条件を失う。'},
+  dentist:   {name:'歯医者',        tag:'村人陣営', emoji:'🦷', type:'village',
+    desc:'毎晩一人の虫歯率を見れる。村人陣営は0〜60%、人狼陣営・狼憑きは45〜100%。'},
+  politician:{name:'政治家',        tag:'村人陣営', emoji:'🗳️', type:'village',
+    desc:'自分への投票が3倍の重みで計算される（処刑されやすくなる）。夜は市民と同じ。'},
+  wolfboy:   {name:'オオカミ少年',  tag:'村人陣営', emoji:'📢', type:'village',
+    desc:'2日目の夜、人狼陣営が全員わかる。ただし人狼側にも自分がオオカミ少年だとばれる。'},
+  bomber:    {name:'爆弾魔',        tag:'村人陣営', emoji:'💣', type:'village',
+    desc:'投票で処刑されるとランダムで1人を道連れにする。夜は市民と同じ。'},
+  god:       {name:'神',            tag:'個人陣営', emoji:'⚡', type:'solo',
+    desc:'夜に全員の役職を確認できる。ゲーム終了時に生きていれば単独勝ち（他の勝者を上書き）。'},
+  fireBoy:   {name:'ファイヤーボーイ', tag:'個人陣営', emoji:'🔥', type:'solo',
+    desc:'2日目以降の昼に1/10の確率で単独勝ち。複数が同時に発動した場合は全員勝ち。'},
+  mafia:     {name:'マフィア',  tag:'人狼陣営', emoji:'🤵', type:'wolf',
+    desc:'人狼陣営。人狼がいる間は裏切り者と同じ。人狼が全滅すると毎晩一人を殺害できるようになる。占いで人狼陣営と判定される。'},
+  pharmacist:{name:'薬剤師',   tag:'人狼陣営', emoji:'💊', type:'wolf',
+    desc:'人狼陣営。夜に毒を盛ると2日後に対象が死亡する（時間差キル）。毒待ち中の夜は算数。占いで人狼陣営と判定される。'},
+  detective: {name:'探偵',     tag:'人狼陣営', emoji:'🕵️', type:'wolf',
+    desc:'人狼陣営。夜にターゲットと役職を選び、正解なら殺害。外れると自分が死ぬ。棄権可。占いで村人陣営と判定される。'},
+};
+
+// ─── Utils ──────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'title') { stopWin(); playBgm('title'); }
+}
+
+function aliveWolves()    { return alivePlayers.filter(i => ROLES[playerRoles[i]].type === 'wolf'); }
+function aliveCitizens()  { return alivePlayers.filter(i => ROLES[playerRoles[i]].type === 'village'); }
+function aliveNonWolves() { return alivePlayers.filter(i => ROLES[playerRoles[i]].type !== 'wolf'); }
+
+function getRealFaction(idx) {
+  // For seer/dentist: cursed shows as wolf, traitor shows as village
+  const r = playerRoles[idx];
+  if (r === 'cursed') return 'wolf';
+  if (r === 'traitor') return 'village';
+  if (r === 'detective') return 'village';
+  return ROLES[r].type;
+}
+
+function generateMath() {
+  const a = Math.floor(Math.random()*9)+1, b = Math.floor(Math.random()*9)+1;
+  const ans = a + b;
+  const wrongs = new Set();
+  while (wrongs.size < 3) {
+    const w = ans + (Math.floor(Math.random()*5) - 2);
+    if (w !== ans && w > 0) wrongs.add(w);
+  }
+  return { eq:`${a} + ${b}`, ans, choices:[...wrongs, ans].sort(()=>Math.random()-0.5) };
+}
+
+function markDeath(idx) {
+  // When a player dies, check gambler bets
+  gamblerBets && Object.entries(gamblerBets).forEach(([gIdx, tIdx]) => {
+    if (+tIdx === idx) gamblerLost.add(+gIdx);
+  });
+}
+
+// ─── Setup ──────────────────────────────────────────
+function selectCount(n) { playerCount = n; buildNameInputs(n); showScreen('names'); }
+
+function buildNameInputs(n) {
+  const list = document.getElementById('names-list');
+  list.innerHTML = '';
+  for (let i=1;i<=n;i++) {
+    const row = document.createElement('div'); row.className = 'name-row';
+    row.innerHTML = `<span class="name-num">${i}</span>
+      <input class="name-input" id="name-${i}" type="text" placeholder="プレイヤー ${i} の名前" maxlength="10" autocomplete="off">`;
+    list.appendChild(row);
+  }
+}
+
+function getNames() {
+  return Array.from({length:playerCount},(_,i)=>{
+    const v = document.getElementById(`name-${i+1}`)?.value.trim();
+    return v || `プレイヤー${i+1}`;
+  });
+}
+
+function goToMode() { showScreen('mode'); }
+
+function startGame(mode) {
+  // job mode is available
+  currentGameMode = mode;
+  playerNames = getNames();
+  playerRoles = assignRoles(playerCount, mode);
+  alivePlayers = playerNames.map((_,i)=>i);
+  deadPlayers = []; mediumInvestigated = new Set();
+  gamblerBets = {}; gamblerLost = new Set();
+  teruExited = new Set(); copyDone = new Set();
+  pharmacistPoisons = {}; nightDetectiveActions = [];
+  dayCount = 0; dealIndex = 0;
+  showDealPass(); showScreen('deal');
+}
+
+function assignRoles(n, mode) {
+  if (mode === 'job') return generateJobRoles(n);
+  if (mode === 'ffa') return Array(n).fill('citizen'); // placeholders, player picks later
+  let roles = [...ROLE_TABLE_NORMAL[n]];
+  for (let i=roles.length-1;i>0;i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [roles[i],roles[j]] = [roles[j],roles[i]];
+  }
+  return roles;
+}
+
+// ─── Deal Phase ─────────────────────────────────────
+function showDealPass() {
+  document.getElementById('deal-pass').style.display = 'flex';
+  document.getElementById('deal-reveal').style.display = 'none';
+  document.getElementById('deal-alldone').style.display = 'none';
+  document.getElementById('deal-player-name').textContent = playerNames[dealIndex];
+  document.getElementById('deal-progress').textContent = `${dealIndex+1} / ${playerCount}`;
+}
+
+function revealRole() {
+  document.getElementById('deal-pass').style.display = 'none';
+  if (currentGameMode === 'ffa') {
+    showFFAPicker();
+  } else {
+    applyRoleCard(playerRoles[dealIndex]);
+    document.getElementById('deal-reveal').style.display = 'flex';
+  }
+}
+
+function applyRoleCard(roleKey) {
+  const role = ROLES[roleKey];
+  const card = document.getElementById('deal-role-card');
+  const cardClass = role.type === 'wolf' ? 'wolf' : (role.type === 'solo' || role.type === 'none') ? 'solo' : 'citizen';
+  card.className = 'role-card ' + cardClass;
+  document.getElementById('deal-role-tag').textContent = role.tag;
+  document.getElementById('deal-role-emoji').textContent = role.emoji;
+  document.getElementById('deal-role-name').textContent = role.name;
+  document.getElementById('deal-role-desc').textContent = role.desc;
+}
+
+// FFA role order: village → wolf → solo/none
+const FFA_ROLE_ORDER = [
+  'citizen','seer','bodyguard','medium','police','cursed','tanaka','dentist','politician','wolfboy','bomber',
+  'wolf','traitor','mafia','pharmacist','detective',
+  'teru','gambler','god','fireBoy','copy'
+];
+
+function showFFAPicker() {
+  const reveal = document.getElementById('deal-reveal');
+  reveal.innerHTML = '';
+  reveal.style.display = 'flex';
+
+  const header = document.createElement('p');
+  header.style.cssText = 'font-size:12px;letter-spacing:.3em;color:var(--muted);margin-bottom:6px;';
+  header.textContent = t('ffa_pick');
+  reveal.appendChild(header);
+
+  const name = document.createElement('p');
+  name.style.cssText = "font-family:'Shippori Mincho',serif;font-size:20px;color:var(--moon);margin-bottom:16px;";
+  name.textContent = playerNames[dealIndex];
+  reveal.appendChild(name);
+
+  const list = document.createElement('div');
+  list.style.cssText = 'width:100%;max-width:320px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:52vh;margin-bottom:16px;';
+  reveal.appendChild(list);
+
+  FFA_ROLE_ORDER.forEach(key => {
+    if (!ROLES[key]) return;
+    const r = ROLES[key];
+    const col = r.type === 'wolf' ? '#e08080' : r.type === 'solo' || r.type === 'none' ? '#56c8e0' : '#7ac07a';
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target';
+    btn.style.justifyContent = 'flex-start';
+    btn.innerHTML = `<span style="font-size:20px;">${r.emoji}</span>
+      <span style="flex:1;text-align:left;">${r.name}</span>
+      <span style="font-size:11px;color:${col};">${r.tag}</span>`;
+    btn.addEventListener('click', () => ffaPickRole(key));
+    list.appendChild(btn);
+  });
+
+  const warn = document.createElement('p');
+  warn.className = 'role-warning';
+  warn.textContent = t('ffa_warn');
+  reveal.appendChild(warn);
+}
+
+function ffaPickRole(key) {
+  playerRoles[dealIndex] = key;
+  const r = ROLES[key];
+  const cardClass = r.type === 'wolf' ? 'wolf' : (r.type === 'solo' || r.type === 'none') ? 'solo' : 'citizen';
+  const reveal = document.getElementById('deal-reveal');
+  reveal.innerHTML = '';
+  reveal.style.display = 'flex';
+
+  const card = document.createElement('div');
+  card.className = 'role-card ' + cardClass;
+  card.innerHTML = `<span class="role-tag">${r.tag}</span>
+    <span class="role-emoji">${r.emoji}</span>
+    <span class="role-name">${r.name}</span>
+    <p class="role-desc-text">${r.desc}</p>`;
+  reveal.appendChild(card);
+
+  const warn = document.createElement('p');
+  warn.className = 'role-warning';
+  warn.textContent = '⚠️ 他の人には見せないでください';
+  reveal.appendChild(warn);
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn-confirm';
+  confirmBtn.textContent = '確認しました　→';
+  confirmBtn.addEventListener('click', confirmRole);
+  reveal.appendChild(confirmBtn);
+}
+
+function confirmRole() {
+  dealIndex++;
+  // Restore deal-reveal inner structure for next player (FFA may have mutated it)
+  const reveal = document.getElementById('deal-reveal');
+  if (currentGameMode === 'ffa') {
+    reveal.innerHTML = `
+      <div class="role-card citizen" id="deal-role-card">
+        <span class="role-tag" id="deal-role-tag"></span>
+        <span class="role-emoji" id="deal-role-emoji"></span>
+        <span class="role-name" id="deal-role-name"></span>
+        <p class="role-desc-text" id="deal-role-desc"></p>
+      </div>
+      <p class="role-warning" id="deal-role-warning">⚠️ 他の人には見せないでください</p>
+      <button class="btn-confirm" onclick="confirmRole()" data-i18n="deal_confirmed">確認しました　→</button>`;
+  }
+  reveal.style.display = 'none';
+  if (dealIndex >= playerCount) {
+    // FFA: check faction composition
+    if (currentGameMode === 'ffa') {
+      const wolves = playerRoles.filter(r => ROLES[r].type === 'wolf').length;
+      const village = playerRoles.filter(r => ROLES[r].type === 'village').length;
+      if (wolves === 0 && village > 0) {
+        document.getElementById('deal-alldone').innerHTML = `
+          <div class="alldone-icon">🕊️</div>
+          <p class="alldone-title">${t('peace')}</p>
+          <p class="alldone-sub">${t('peace_sub')}</p>
+          <button class="btn-primary" onclick="location.reload()">${t('try_again')}</button>`;
+        document.getElementById('deal-alldone').style.display = 'flex';
+        document.getElementById('deal-progress').textContent = t('deal_done');
+        return;
+      }
+      if (wolves > 0 && village === 0) {
+        document.getElementById('deal-alldone').innerHTML = `
+          <div class="alldone-icon">🐺</div>
+          <p class="alldone-title">${t('same_clan_wolf')}</p>
+          <p class="alldone-sub">${t('same_clan_wolf_sub')}</p>
+          <button class="btn-primary" onclick="location.reload()">${t('try_again')}</button>`;
+        document.getElementById('deal-alldone').style.display = 'flex';
+        document.getElementById('deal-progress').textContent = t('deal_done');
+        return;
+      }
+      if (village === 0 && wolves === 0) {
+        const soloOnly = true;
+        document.getElementById('deal-alldone').innerHTML = `
+          <div class="alldone-icon">🌀</div>
+          <p class="alldone-title">${t('no_faction')}</p>
+          <p class="alldone-sub">${soloOnly ? '個人陣営しかいませんでした。' : '村人が一人もいませんでした。'}</p>
+          <button class="btn-primary" onclick="location.reload()">もう一度</button>`;
+        document.getElementById('deal-alldone').style.display = 'flex';
+        document.getElementById('deal-progress').textContent = '配布完了';
+        return;
+      }
+    }
+    document.getElementById('deal-pass').style.display = 'none';
+    document.getElementById('deal-alldone').style.display = 'flex';
+    document.getElementById('deal-progress').textContent = '配布完了';
+  } else { showDealPass(); }
+}
+
+// ─── Day Phase ──────────────────────────────────────
+function startDayPhase() { dayCount = 1; showDayScreen(); showScreen('day'); }
+
+function showDayScreen() {
+  playBgm('day');
+  const first = dayCount === 1;
+  document.getElementById('day-badge-text').textContent = t('day_badge', {n: dayCount});
+  document.getElementById('day-title').textContent = t('day_title');
+  document.getElementById('day-subtitle').textContent = first
+    ? t('day_sub_first') : t('day_sub');
+
+  // Alive chips
+  const chips = document.getElementById('day-alive-chips');
+  chips.innerHTML = '';
+  alivePlayers.forEach(i => {
+    const c = document.createElement('div'); c.className = 'alive-chip';
+    c.innerHTML = `<span class="alive-dot"></span>${playerNames[i]}`;
+    chips.appendChild(c);
+  });
+
+  // Tanaka announcement
+  const tanakasAlive = alivePlayers.filter(i => playerRoles[i] === 'tanaka');
+  let noteText = first
+    ? t('day_note_first') : t('day_note');
+  if (tanakasAlive.length > 0) {
+    noteText += `\n\n${t('day_tanaka')}${tanakasAlive.map(i=>playerNames[i]).join('、')}`;
+  }
+  document.getElementById('day-note').textContent = noteText;
+  document.getElementById('day-note').style.whiteSpace = 'pre-line';
+
+  // FireBoy check (day 2+)
+  if (!first && currentGameMode === 'job') {
+    const fireboys = alivePlayers.filter(i => playerRoles[i] === 'fireBoy');
+    const winners = fireboys.filter(() => Math.floor(Math.random()*10) === 0);
+    if (winners.length > 0) {
+      setTimeout(() => {
+        const names = winners.map(i=>playerNames[i]).join('、');
+        document.getElementById('day-note').textContent =
+          t('day_fireBoy_win', {names});
+        document.getElementById('day-next-btn').textContent = t('day_result');
+        document.getElementById('day-next-btn').onclick = () => showVictory('solo', winners);
+      }, 300);
+      return;
+    }
+  }
+
+  const btn = document.getElementById('day-next-btn');
+  btn.textContent = first ? t('day_to_night') : t('day_to_vote');
+  btn.onclick = dayNextPhase;
+}
+
+function dayNextPhase() { dayCount === 1 ? startNightPhase() : startVotePhase(); }
+
+// ─── Vote Phase ─────────────────────────────────────
+function startVotePhase() {
+  playBgm('vote');
+  voteOrder = [...alivePlayers]; voteIndex = 0;
+  voteTally = {abstain:0};
+  alivePlayers.forEach(i => { voteTally[i] = 0; });
+  showVoteTurn(); showScreen('vote');
+}
+
+function showVoteTurn() {
+  const voterIdx = voteOrder[voteIndex];
+  document.getElementById('vote-voter-name').textContent = playerNames[voterIdx];
+  document.getElementById('vote-progress-fill').style.width = (voteIndex/voteOrder.length*100)+'%';
+  const targets = document.getElementById('vote-targets');
+  targets.innerHTML = '';
+  alivePlayers.forEach(i => {
+    if (i === voterIdx) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn-vote-target';
+    btn.innerHTML = `<span class="vote-target-icon">👤</span>${playerNames[i]}`;
+    btn.onclick = () => castVote(i);
+    targets.appendChild(btn);
+  });
+}
+
+function castVote(targetIdx) {
+  if (targetIdx !== null) voteTally[targetIdx] = (voteTally[targetIdx]||0)+1;
+  else voteTally['abstain'] = (voteTally['abstain']||0)+1;
+  voteIndex++;
+  if (voteIndex >= voteOrder.length) showExecuteResult();
+  else { showVoteTurn(); window.scrollTo(0,0); }
+}
+
+// ─── Execute Result ──────────────────────────────────
+function showExecuteResult() {
+  const abstainCount = voteTally['abstain'] || 0;
+
+  // No post-processing needed: politician weight is applied at castVote time
+  const adjustedTally = {...voteTally};
+
+  let maxPlayerVotes = 0;
+  alivePlayers.forEach(i => { if ((adjustedTally[i]||0) > maxPlayerVotes) maxPlayerVotes = adjustedTally[i]||0; });
+  const topCandidates = alivePlayers.filter(i => (adjustedTally[i]||0) === maxPlayerVotes);
+  const noExecution = abstainCount > maxPlayerVotes || topCandidates.length > 1 || maxPlayerVotes === 0;
+
+  const content = document.getElementById('execute-content');
+  const nextBtn = document.getElementById('execute-next-btn');
+
+  if (noExecution) {
+    const reason = abstainCount > maxPlayerVotes
+      ? `棄権が最多（${abstainCount}票）でした。`
+      : maxPlayerVotes === 0 ? '全員が棄権しました。'
+      : topCandidates.map(i=>playerNames[i]).join('、') + ' が同票でした。';
+    content.innerHTML = `
+      <div class="execute-icon">⚖️</div>
+      <p class="execute-label">処刑結果</p>
+      <div class="no-execute-box">${reason}<br><br>今日は誰も処刑されませんでした。</div>
+      <div class="execute-divider"></div>`;
+    nextBtn.textContent = t('exec_to_night');
+    nextBtn.onclick = () => startNightPhase();
+    showScreen('execute'); return;
+  }
+
+  const executedIdx = topCandidates[0];
+  const voteSummary = Object.entries(adjustedTally)
+    .filter(([k,v])=> v>0 && k!=='abstain').map(([i,v])=>`${playerNames[i]}：${v}票`).join('　')
+    + (abstainCount > 0 ? `　棄権：${abstainCount}票` : '');
+
+  // ── てるてる坊主: instant solo win ──
+  if (playerRoles[executedIdx] === 'teru') {
+    deadPlayers.push({idx:executedIdx, role:playerRoles[executedIdx]});
+    alivePlayers = alivePlayers.filter(i => i !== executedIdx);
+    markDeath(executedIdx);
+    showVictory('solo', [executedIdx]);
+    return;
+  }
+
+  // Normal execution
+  content.innerHTML = `
+    <div class="execute-icon">🪦</div>
+    <p class="execute-label">処刑</p>
+    <p class="execute-name">${playerNames[executedIdx]}</p>
+    <p class="execute-votes-summary">${voteSummary}</p>
+    <div class="execute-divider"></div>`;
+
+  deadPlayers.push({idx:executedIdx, role:playerRoles[executedIdx]});
+  alivePlayers = alivePlayers.filter(i => i !== executedIdx);
+  markDeath(executedIdx);
+
+  // ── 爆弾魔: chain kill ──
+  let bomberVictimIdx = null;
+  if (playerRoles[executedIdx] === 'bomber' && alivePlayers.length > 0) {
+    bomberVictimIdx = alivePlayers[Math.floor(Math.random()*alivePlayers.length)];
+    deadPlayers.push({idx:bomberVictimIdx, role:playerRoles[bomberVictimIdx]});
+    alivePlayers = alivePlayers.filter(i => i !== bomberVictimIdx);
+    markDeath(bomberVictimIdx);
+    content.innerHTML += `<div class="no-execute-box" style="border-color:#e05c5c;color:#e08080;">
+      💣 爆弾魔の道連れ！<br>${playerNames[bomberVictimIdx]} も巻き込まれた…
+    </div><div class="execute-divider"></div>`;
+  }
+
+  const winResult = checkWinCondition();
+  if (winResult) {
+    nextBtn.textContent = '結果を見る';
+    nextBtn.onclick = () => showVictory(winResult.winner, winResult.soloWinners);
+  } else {
+    nextBtn.textContent = '夜フェーズへ →';
+    nextBtn.onclick = () => startNightPhase();
+  }
+  showScreen('execute');
+}
+
+// ─── Night Phase ────────────────────────────────────
+function startNightPhase() {
+  playBgm('night');
+  nightOrder = [...alivePlayers];
+  nightIdx = 0; nightWolfVotes = {}; nightProtectedIdx = null; nightPoliceTarget = null;
+  nightDetectiveActions = [];
+  showNightPass(); showScreen('night');
+}
+
+function showNightPass() {
+  const pIdx = nightOrder[nightIdx];
+  document.getElementById('night-player-name').textContent = playerNames[pIdx];
+  document.getElementById('night-progress').textContent = `${nightIdx+1} / ${nightOrder.length}`;
+  document.getElementById('night-pass-wrap').style.display = 'flex';
+  document.getElementById('night-action-wrap').style.display = 'none';
+  window.scrollTo(0,0);
+}
+
+function showNightAction() {
+  const pIdx = nightOrder[nightIdx];
+  const roleKey = playerRoles[pIdx];
+  const role = ROLES[roleKey];
+  document.getElementById('night-action-emoji').textContent = role.emoji;
+  document.getElementById('night-action-label').textContent = role.tag;
+  document.getElementById('night-pass-wrap').style.display = 'none';
+  document.getElementById('night-action-wrap').style.display = 'flex';
+  const content = document.getElementById('night-action-content');
+  content.innerHTML = '';
+
+  switch(roleKey) {
+    case 'wolf':      buildWolfAction(pIdx, content); break;
+    case 'seer':      buildSeerAction(pIdx, content); break;
+    case 'bodyguard': buildGuardAction(pIdx, content); break;
+    case 'medium':    buildMediumAction(pIdx, content); break;
+    case 'police':    buildPoliceAction(pIdx, content); break;
+    case 'copy':      buildCopyAction(pIdx, content); break;
+    case 'gambler':   buildGamblerAction(pIdx, content); break;
+    case 'dentist':   buildDentistAction(pIdx, content); break;
+    case 'wolfboy':   buildWolfboyAction(pIdx, content); break;
+    case 'god':       buildGodAction(pIdx, content); break;
+    case 'mafia':     buildMafiaAction(pIdx, content); break;
+    case 'pharmacist':buildPharmacistAction(pIdx, content); break;
+    case 'detective': buildDetectiveAction(pIdx, content); break;
+    default:          buildMathAction(content); break;
+  }
+}
+
+// Wolf
+function buildWolfAction(pIdx, content) {
+  let title = t('night_wolf_title');
+  // Night 2+: wolfboy is revealed
+  if (dayCount >= 2) {
+    const wbIdx = alivePlayers.find(i => playerRoles[i] === 'wolfboy');
+    if (wbIdx !== undefined) {
+      const wbLabel = currentLang === 'en' ? `\n⚠️ Wolf Boy: ${playerNames[wbIdx]}` : `\n⚠️ オオカミ少年：${playerNames[wbIdx]}`;
+      title += wbLabel;
+    }
+  }
+  document.getElementById('night-action-title').textContent = title;
+  document.getElementById('night-action-title').style.whiteSpace = 'pre-line';
+  const nonWolves = alivePlayers.filter(i => ROLES[playerRoles[i]].type !== 'wolf');
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  nonWolves.forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target wolf-t';
+    btn.innerHTML = `🔪　${playerNames[i]}`;
+    btn.onclick = () => { nightWolfVotes[i] = (nightWolfVotes[i]||0)+1; nightActionDone(); };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Seer
+function buildSeerAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = t('night_seer_title');
+  const targets = alivePlayers.filter(i => i !== pIdx);
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  targets.forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🔮　${playerNames[i]}`;
+    btn.onclick = () => {
+      const seerFaction = getRealFaction(i); // cursed→wolf, traitor→village
+      const isWolf = seerFaction === 'wolf';
+      const fEmoji = isWolf ? '🐺' : '🏘️';
+      const fLabel = isWolf ? t('wolf_faction') : t('village_faction');
+      content.innerHTML = `
+        <div class="seer-result-box ${isWolf ? 'wolf' : 'citizen'}">
+          <p class="seer-result-name">${playerNames[i]}</p>
+          <p class="seer-result-role">${fEmoji}　${fLabel}</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()" data-i18n="deal_confirmed">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Bodyguard
+function buildGuardAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = t('night_guard_title');
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  alivePlayers.filter(i => i !== pIdx).forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target guard-t';
+    btn.innerHTML = `🛡️　${playerNames[i]}`;
+    btn.onclick = () => { nightProtectedIdx = i; nightActionDone(); };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Medium
+function buildMediumAction(pIdx, content) {
+  const available = deadPlayers.filter(d => !mediumInvestigated.has(d.idx));
+  if (available.length === 0) {
+    document.getElementById('night-action-title').textContent = t('night_medium_none');
+    buildMathAction(content); return;
+  }
+  document.getElementById('night-action-title').textContent = t('night_medium_title');
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  available.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🕯️　${playerNames[d.idx]}（故人）`;
+    btn.onclick = () => {
+      mediumInvestigated.add(d.idx);
+      const medFaction = getRealFaction(d.idx);
+      const isWolf = medFaction === 'wolf';
+      content.innerHTML = `
+        <div class="seer-result-box ${isWolf ? 'wolf' : 'citizen'}">
+          <p class="seer-result-name">${playerNames[d.idx]}</p>
+          <p class="seer-result-role">${isWolf ? '🐺　人狼陣営' : '🏘️　村人陣営'}</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()" data-i18n="deal_confirmed">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Police
+function buildPoliceAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = t('night_police_title');
+  document.getElementById('night-action-title').style.whiteSpace = 'pre-line';
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  alivePlayers.filter(i => i !== pIdx).forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target wolf-t';
+    btn.innerHTML = `👮　${playerNames[i]}`;
+    btn.onclick = () => { nightPoliceTarget = {police: pIdx, target: i}; nightActionDone(); };
+    wrap.appendChild(btn);
+  });
+  // Abstain
+  const skip = document.createElement('button');
+  skip.className = 'btn-vote-skip'; skip.textContent = t('night_police_skip');
+  skip.style.marginTop = '8px';
+  skip.onclick = () => { nightPoliceTarget = null; nightActionDone(); };
+  content.appendChild(wrap);
+  content.appendChild(skip);
+}
+
+// Copy
+function buildCopyAction(pIdx, content) {
+  if (copyDone.has(pIdx)) { buildMathAction(content); return; }
+  const available = deadPlayers.filter(d => !teruExited.has(d.idx));
+  if (available.length === 0) {
+    document.getElementById('night-action-title').textContent = t('night_copy_none');
+    buildMathAction(content); return;
+  }
+  document.getElementById('night-action-title').textContent = t('night_copy_title');
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  available.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🃏　${playerNames[d.idx]}（故人）`;
+    btn.onclick = () => {
+      copyDone.add(pIdx);
+      const inherited = d.role;
+      const r = ROLES[inherited];
+      playerRoles[pIdx] = inherited;
+      content.innerHTML = `
+        <div class="seer-result-box ${r.type === 'wolf' ? 'wolf' : 'citizen'}" style="text-align:center;padding:24px;">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">あなたが受け継いだ役職は…</p>
+          <p style="font-size:36px;margin-bottom:8px;">${r.emoji}</p>
+          <p class="seer-result-name">${r.name} でした！</p>
+          <p class="seer-result-role">あなたは ${r.tag} になりました！</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()" data-i18n="deal_confirmed">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  const skip = document.createElement('button');
+  skip.className = 'btn-vote-skip'; skip.textContent = t('night_copy_skip');
+  skip.style.marginTop = '8px';
+  skip.onclick = () => nightActionDone();
+  content.appendChild(wrap);
+  content.appendChild(skip);
+}
+
+// Gambler
+function buildGamblerAction(pIdx, content) {
+  if (gamblerBets[pIdx] !== undefined || gamblerLost.has(pIdx)) {
+    // Already bet or lost condition — math
+    document.getElementById('night-action-title').textContent =
+      gamblerLost.has(pIdx) ? '賭けの対象が死亡しました…' : `賭け済み：${playerNames[gamblerBets[pIdx]]}`;
+    buildMathAction(content); return;
+  }
+  document.getElementById('night-action-title').textContent = t('night_gambler_title');
+  document.getElementById('night-action-title').style.whiteSpace = 'pre-line';
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  alivePlayers.filter(i => i !== pIdx).forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🎰　${playerNames[i]}`;
+    btn.onclick = () => {
+      gamblerBets[pIdx] = i;
+      content.innerHTML = `
+        <div class="seer-result-box citizen" style="text-align:center;padding:20px;">
+          <p class="seer-result-name">${playerNames[i]}</p>
+          <p class="seer-result-role" style="color:var(--accent);">に賭けました！</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ 賭けの相手には言わないでください</p>
+        <button class="btn-confirm" onclick="nightActionDone()" data-i18n="deal_confirmed">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Dentist
+function buildDentistAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = t('night_dentist_title');
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  alivePlayers.filter(i => i !== pIdx).forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🦷　${playerNames[i]}`;
+    btn.onclick = () => {
+      const isWolfSide = (ROLES[playerRoles[i]].type === 'wolf' || playerRoles[i] === 'cursed');
+      let pct;
+      if (isWolfSide) pct = 45 + Math.floor(Math.random()*56); // 45-100
+      else pct = Math.floor(Math.random()*61);                  // 0-60
+      const color = pct >= 70 ? '#e08080' : pct >= 45 ? '#c8a96e' : '#7ac07a';
+      content.innerHTML = `
+        <div class="seer-result-box citizen" style="text-align:center;padding:24px;">
+          <p class="seer-result-name">${playerNames[i]}</p>
+          <p style="font-size:36px;font-weight:800;color:${color};margin:8px 0;">${pct}%</p>
+          <p style="font-size:13px;color:var(--muted);">虫歯率</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()" data-i18n="deal_confirmed">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Wolfboy
+function buildWolfboyAction(pIdx, content) {
+  if (dayCount >= 2) {
+    document.getElementById('night-action-title').textContent = t('night_wolfboy_title');
+    const wolves = alivePlayers.filter(i => ROLES[playerRoles[i]].type === 'wolf');
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'width:100%;max-width:320px;';
+    wrap.innerHTML = wolves.map(i =>
+      `<div class="seer-result-box wolf" style="margin-bottom:10px;text-align:center;padding:14px;">
+        <p class="seer-result-name">${playerNames[i]}</p>
+        <p class="seer-result-role">🐺　人狼陣営</p>
+      </div>`
+    ).join('') + `
+      <p class="role-warning" style="margin:12px 0;">⚠️ 人狼にもあなたの正体がばれています</p>
+      <button class="btn-confirm" style="width:100%;" onclick="nightActionDone()" data-i18n="deal_confirmed">確認しました　→</button>`;
+    content.appendChild(wrap);
+  } else {
+    document.getElementById('night-action-title').textContent = t('night_wolfboy_none');
+    buildMathAction(content);
+  }
+}
+
+// God
+function buildGodAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = t('night_god_title');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;max-width:320px;';
+  wrap.innerHTML = alivePlayers.filter(i => i !== pIdx).map(i => {
+    const r = ROLES[playerRoles[i]];
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+      background:var(--surface);border:1px solid ${r.type==='wolf'?'rgba(224,92,92,0.4)':r.type==='solo'||r.type==='none'?'rgba(56,200,224,0.4)':'rgba(74,138,74,0.4)'};border-radius:8px;margin-bottom:8px;">
+      <span style="font-size:22px;">${r.emoji}</span>
+      <span style="font-size:15px;">${playerNames[i]}</span>
+      <span style="font-size:12px;color:${r.type==='wolf'?'#e08080':r.type==='solo'||r.type==='none'?'#56c8e0':'#7ac07a'};margin-left:auto;">${r.name}</span>
+    </div>`;
+  }).join('') + `
+    <p class="role-warning" style="margin:12px 0;">⚠️ 生き残ればあなたの勝利です</p>
+    <button class="btn-confirm" style="width:100%;" onclick="nightActionDone()" data-i18n="deal_confirmed">確認しました　→</button>`;
+  content.appendChild(wrap);
+}
+
+// Math (citizen / fallback)
+function buildMathAction(content) {
+  document.getElementById('night-action-title').textContent = t('night_math_title');
+  const {eq, ans, choices} = generateMath();
+  const wrap = document.createElement('div'); wrap.className = 'math-wrap';
+  wrap.innerHTML = `
+    <p class="math-desc">${t('night_math_desc').replace('\\n','<br>')}</p>
+    <p class="math-equation">${eq} = ?</p>
+    <div class="math-choices" id="math-grid"></div>`;
+  content.appendChild(wrap);
+  const grid = wrap.querySelector('#math-grid');
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-math'; btn.textContent = c;
+    btn.onclick = () => {
+      if (btn.disabled) return;
+      if (c === ans) {
+        grid.querySelectorAll('.btn-math').forEach(b => {
+          b.disabled = true;
+          if (+b.textContent === ans) b.classList.add('correct');
+          else b.style.opacity = '0.3';
+        });
+        setTimeout(() => nightActionDone(), 700);
+      } else {
+        grid.querySelectorAll('.btn-math').forEach(b => b.disabled = true);
+        btn.classList.add('wrong');
+        setTimeout(() => {
+          btn.classList.remove('wrong');
+          grid.querySelectorAll('.btn-math').forEach(b => b.disabled = false);
+        }, 400);
+      }
+    };
+    grid.appendChild(btn);
+  });
+}
+
+
+// Mafia: acts as wolf when no real wolves alive
+function buildMafiaAction(pIdx, content) {
+  const realWolves = alivePlayers.filter(i => playerRoles[i] === 'wolf');
+  if (realWolves.length > 0) {
+    // wolves still alive — behave like traitor
+    document.getElementById('night-action-title').textContent = '人狼が生きている間は待機';
+    buildMathAction(content);
+    return;
+  }
+  // No real wolves — mafia can now kill
+  document.getElementById('night-action-title').textContent = '人狼が消えた。今夜、誰を殺しますか？';
+  const nonWolves = alivePlayers.filter(i => ROLES[playerRoles[i]].type !== 'wolf');
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  nonWolves.forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target wolf-t';
+    btn.innerHTML = `🤵　${playerNames[i]}`;
+    btn.onclick = () => { nightWolfVotes[i] = (nightWolfVotes[i]||0)+1; nightActionDone(); };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Pharmacist: time-delayed kill
+function buildPharmacistAction(pIdx, content) {
+  const poison = pharmacistPoisons[pIdx];
+  if (poison && poison.daySet === dayCount - 1) {
+    // Waiting night — math
+    document.getElementById('night-action-title').textContent = '毒が効くまで待て…';
+    buildMathAction(content);
+    return;
+  }
+  document.getElementById('night-action-title').textContent = '今夜、誰に毒を盛りますか？';
+  const nonWolves = alivePlayers.filter(i => ROLES[playerRoles[i]].type !== 'wolf');
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  nonWolves.forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target wolf-t';
+    btn.innerHTML = `💊　${playerNames[i]}`;
+    btn.onclick = () => {
+      pharmacistPoisons[pIdx] = {targetIdx: i, daySet: dayCount};
+      content.innerHTML = `
+        <div class="seer-result-box wolf" style="text-align:center;padding:20px;">
+          <p class="seer-result-name">${playerNames[i]}</p>
+          <p class="seer-result-role" style="color:#e08080;">に毒を盛りました…</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Detective: guess role to kill
+function buildDetectiveAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = 'ターゲットと役職を選んでください';
+  // Step 1: pick target
+  const targets = alivePlayers.filter(i => i !== pIdx);
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  targets.forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🕵️　${playerNames[i]}`;
+    btn.onclick = () => buildDetectiveGuess(pIdx, i, content);
+    wrap.appendChild(btn);
+  });
+  // Abstain
+  const skip = document.createElement('button');
+  skip.className = 'btn-vote-skip'; skip.textContent = '— 今夜は動かない —';
+  skip.style.marginTop = '8px';
+  skip.onclick = () => nightActionDone();
+  content.appendChild(wrap);
+  content.appendChild(skip);
+}
+
+function buildDetectiveGuess(detPIdx, targetIdx, content) {
+  document.getElementById('night-action-title').textContent = `${playerNames[targetIdx]} の役職は？`;
+  content.innerHTML = '';
+  // Show roles present in this game
+  const rolesInGame = [...new Set(playerRoles)];
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  rolesInGame.forEach(roleKey => {
+    const r = ROLES[roleKey];
+    if (!r) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `${r.emoji}　${r.name}`;
+    btn.onclick = () => {
+      nightDetectiveActions.push({detective: detPIdx, target: targetIdx, guess: roleKey});
+      content.innerHTML = `
+        <div class="seer-result-box citizen" style="text-align:center;padding:20px;">
+          <p class="seer-result-name">${playerNames[targetIdx]}</p>
+          <p class="seer-result-role" style="color:var(--accent);">${r.emoji} ${r.name} と推理</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ 結果は朝まで分かりません</p>
+        <button class="btn-confirm" onclick="nightActionDone()">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+function nightActionDone() {
+  nightIdx++;
+  if (nightIdx >= nightOrder.length) processNightResults();
+  else showNightPass();
+}
+
+// ─── Night Results ───────────────────────────────────
+function processNightResults() {
+  const newDeaths = new Set();
+  let wasProtected = false;
+
+  // 各人狼が独立して1人を選ぶ → 全て殺す（ボディーガードが守った人だけ除外）
+  Object.keys(nightWolfVotes).forEach(idxStr => {
+    const target = +idxStr;
+    if (target === nightProtectedIdx) {
+      wasProtected = true; // 少なくとも1人がガードされた
+    } else {
+      newDeaths.add(target);
+    }
+  });
+
+  // 警察
+  if (nightPoliceTarget !== null) {
+    const {police: policeIdx, target: tgt} = nightPoliceTarget;
+    const tgtRole = playerRoles[tgt];
+    const isValidTarget = (ROLES[tgtRole].type === 'wolf' || tgtRole === 'cursed');
+    if (isValidTarget) {
+      newDeaths.add(tgt);
+    } else {
+      newDeaths.add(policeIdx);
+    }
+  }
+
+  const poisonedDeaths = new Set();
+  // 薬剤師の時間差キル（前の夜に毒を盛った対象）
+  Object.entries(pharmacistPoisons).forEach(([pIdx, poison]) => {
+    if (poison && poison.daySet === dayCount - 1) {
+      // This night is the death night (daySet+1 = current dayCount)
+      const tgt = poison.targetIdx;
+      if (alivePlayers.includes(tgt)) { newDeaths.add(tgt); poisonedDeaths.add(tgt); }
+      pharmacistPoisons[+pIdx] = null; // consumed
+    }
+  });
+
+  // 探偵のアクション処理
+  nightDetectiveActions.forEach(({detective, target, guess}) => {
+    if (!alivePlayers.includes(detective)) return;
+    const correct = playerRoles[target] === guess;
+    if (correct) {
+      if (alivePlayers.includes(target)) newDeaths.add(target);
+    } else {
+      if (alivePlayers.includes(detective)) newDeaths.add(detective);
+    }
+  });
+
+  // 死亡適用
+  const diedIdxs = [...newDeaths].filter(idx => alivePlayers.includes(idx));
+  diedIdxs.forEach(idx => {
+    deadPlayers.push({idx, role: playerRoles[idx]});
+    alivePlayers = alivePlayers.filter(i => i !== idx);
+    markDeath(idx);
+  });
+
+  showMorning(diedIdxs, wasProtected, poisonedDeaths);
+}
+
+// ─── Morning ────────────────────────────────────────
+function showMorning(diedIdxs, wasProtected, poisonedDeaths=new Set()) {
+  const content = document.getElementById('morning-content');
+  const nextBtn = document.getElementById('morning-next-btn');
+
+  let html = `<div class="morning-icon">🌅</div>
+    <p class="morning-label">${t('morning_night', {n: dayCount})}</p>
+    <p class="morning-title">${t('morning_title')}</p>`;
+
+  if (diedIdxs.length > 0) {
+    diedIdxs.forEach(idx => {
+      const isPoisoned = poisonedDeaths.has(idx);
+      html += `<div class="morning-victim-card">
+        <p style="font-size:12px;color:rgba(224,92,92,0.7);margin-bottom:8px;letter-spacing:0.2em;">${isPoisoned ? '💊 毒殺' : t('morning_victim')}</p>
+        <p class="morning-victim-name">${playerNames[idx]}</p>
+      </div>`;
+    });
+  } else if (wasProtected) {
+    html += `<div class="morning-safe-card">🛡️ ボディーガードが守ったおかげで、今夜は誰も犠牲になりませんでした。</div>`;
+  } else {
+    html += `<div class="morning-safe-card">☀️ 今夜は誰も犠牲になりませんでした。</div>`;
+  }
+  html += `<div class="morning-divider"></div>`;
+  content.innerHTML = html;
+
+  const winResult = checkWinCondition();
+  if (winResult) {
+    nextBtn.textContent = '結果を見る';
+    nextBtn.onclick = () => showVictory(winResult.winner, winResult.soloWinners);
+  } else {
+    dayCount++;
+    nextBtn.textContent = t('morning_next', {n: dayCount});
+    nextBtn.onclick = () => { showDayScreen(); showScreen('day'); };
+  }
+  showScreen('morning');
+}
+
+// ─── Win Condition ───────────────────────────────────
+function checkWinCondition() {
+  const wolves    = aliveWolves();
+  const villagers = aliveCitizens();
+
+  // ゲーム終了条件: 人狼が全滅 or 村人陣営が全滅
+  const wolfWiped    = wolves.length === 0;
+  const villageWiped = villagers.length === 0;
+  if (!wolfWiped && !villageWiped) return null;
+
+  const winSide = wolfWiped ? 'village' : 'wolf';
+
+  // ── 個人陣営を全員収集して一緒に勝利 ──
+  const soloWinners = new Set();
+
+  // 神（全員）
+  alivePlayers.filter(i => playerRoles[i] === 'god').forEach(i => soloWinners.add(i));
+
+  // ギャンブラー（指名した陣営が勝った場合）
+  Object.entries(gamblerBets).forEach(([gIdx, tIdx]) => {
+    if (gamblerLost.has(+gIdx)) return;
+    const betType = ROLES[playerRoles[+tIdx]].type;
+    // wolf/traitor → wolf陣営、それ以外（village/solo/none）→ village陣営として扱う
+    const betSide = betType === 'wolf' ? 'wolf' : 'village';
+    if (winSide === betSide) {
+      soloWinners.add(+gIdx);
+    }
+  });
+
+  // その他の生存中の個人陣営・無陣営
+  alivePlayers.forEach(i => {
+    const role = playerRoles[i];
+    if (role === 'copy') return;     // 未コピーのコピーは勝利しない
+    if (role === 'teru') return;     // てるてる坊主は処刑のみ勝利
+    if (gamblerLost.has(i)) return;  // 賭けに負けたギャンブラーは勝利しない
+    if (gamblerBets[i] !== undefined && !soloWinners.has(i)) return; // ギャンブラーはギャンブラーブロックで処理済み
+    const type = ROLES[role].type;
+    if (type === 'solo' || type === 'none') soloWinners.add(i);
+  });
+
+  if (soloWinners.size > 0) return {winner:'solo', soloWinners: [...soloWinners]};
+
+  return {winner: winSide, soloWinners: []};
+}
+
+// ─── Victory ────────────────────────────────────────
+function showVictory(winner, soloWinners=[]) {
+  playWin();
+  const content = document.getElementById('victory-content');
+  const wolvesAll = playerRoles.map((r,i)=>({r,i})).filter(({r})=>ROLES[r].type==='wolf');
+  const wolfNames = wolvesAll.map(({r,i})=>`${playerNames[i]}（${ROLES[r].name}）`).join('、');
+
+  let html = '';
+  if (winner === 'solo' && soloWinners.length > 0) {
+    const soloParts = soloWinners.map(i => {
+      const r = ROLES[playerRoles[i]];
+      return `${r.emoji} ${playerNames[i]}（${r.name}）`;
+    }).join('、');
+    html = `
+      <div style="font-size:64px;margin-bottom:16px;">🏆</div>
+      <p style="font-size:11px;letter-spacing:.4em;color:var(--muted);margin-bottom:8px;">${t('gameover')}</p>
+      <p style="font-family:'Shippori Mincho',serif;font-size:26px;font-weight:700;color:var(--accent);margin-bottom:16px;">${t('solo_win')}</p>
+      <div style="background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.3);border-radius:10px;padding:16px;max-width:300px;margin-bottom:24px;font-size:14px;color:var(--text);line-height:2;">
+        ${soloParts}
+      </div>`;
+  } else if (winner === 'village') {
+    html = `
+      <div style="font-size:64px;margin-bottom:16px;">🎉</div>
+      <p style="font-size:11px;letter-spacing:.4em;color:var(--muted);margin-bottom:8px;">GAME OVER</p>
+      <p style="font-family:'Shippori Mincho',serif;font-size:28px;font-weight:700;color:#7ac07a;margin-bottom:20px;">村人陣営の勝利！</p>
+      <div style="background:rgba(74,138,74,.08);border:1px solid rgba(74,138,74,.3);border-radius:10px;padding:16px;max-width:300px;margin-bottom:24px;font-size:13px;color:var(--muted);line-height:1.8;">
+        ${t('village_win_desc', {names: wolfNames}).replace('\\n','<br>')}
+      </div>`;
+  } else {
+    html = `
+      <div style="font-size:64px;margin-bottom:16px;">🐺</div>
+      <p style="font-size:11px;letter-spacing:.4em;color:var(--muted);margin-bottom:8px;">${t('gameover')}</p>
+      <p style="font-family:'Shippori Mincho',serif;font-size:28px;font-weight:700;color:#e08080;margin-bottom:20px;">${t('wolf_win')}</p>
+      <div style="background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.3);border-radius:10px;padding:16px;max-width:300px;margin-bottom:24px;font-size:13px;color:var(--muted);line-height:1.8;">
+        ${t('wolf_win_desc', {names: wolfNames}).replace('\\n','<br>')}
+      </div>`;
+  }
+  content.innerHTML = html;
+  showScreen('victory');
+}
+
+// ─── BGM ────────────────────────────────────────────
+let BGM = null;
+let WIN_SFX = null;
+let currentBgm = null;
+let bgmUnlocked = false;
+
+function initBgm() {
+  try {
+    BGM = {
+      title: new Audio('title.mp3'),
+      guide: new Audio('guide.mp3'),
+      day:   new Audio('day.mp3'),
+      vote:  new Audio('vote.mp3'),
+      night: new Audio('night.mp3'),
+    };
+    WIN_SFX = new Audio('win.mp3');
+    Object.values(BGM).forEach(a => { a.loop = true; a.volume = 0.5; });
+    WIN_SFX.volume = 1.0;
+  } catch(e) {}
+}
+
+let pendingPhase = 'title'; // desired BGM before unlock
+
+function unlockAudio() {
+  if (bgmUnlocked) return;
+  bgmUnlocked = true;
+  document.removeEventListener('touchstart', unlockAudio);
+  document.removeEventListener('click', unlockAudio);
+  if (!BGM) return;
+  // Play pendingPhase directly in gesture handler (iOS requires synchronous play)
+  Object.values(BGM).forEach(a => { a.pause(); a.currentTime = 0; });
+  currentBgm = BGM[pendingPhase] || BGM.title;
+  currentBgm.play().catch(() => {});
+}
+
+function playBgm(phase) {
+  if (!BGM) return;
+  pendingPhase = phase;
+  Object.values(BGM).forEach(a => { a.pause(); a.currentTime = 0; });
+  currentBgm = BGM[phase];
+  if (!bgmUnlocked) return; // will play on next tap via pendingPhase
+  currentBgm.play().catch(() => {});
+}
+
+function stopBgm() {
+  if (currentBgm) { currentBgm.pause(); currentBgm.currentTime = 0; currentBgm = null; }
+}
+
+function playWin() {
+  stopBgm();
+  if (!WIN_SFX) return;
+  WIN_SFX.currentTime = 0;
+  WIN_SFX.play().catch(() => {});
+}
+
+function stopWin() {
+  if (!WIN_SFX) return;
+  WIN_SFX.pause();
+  WIN_SFX.currentTime = 0;
+}
+
+window.addEventListener('load', initBgm);
+
+
+// ─── Role Guide ──────────────────────────────────────────────────────────
+const GUIDE_ROLE_ORDER = [
+  'citizen','seer','bodyguard','medium','police','cursed',
+  'tanaka','dentist','politician','wolfboy','bomber',
+  'wolf','traitor','mafia','pharmacist','detective',
+  'teru','gambler','god','fireBoy','copy'
+];
+
+const GUIDE_SUBTITLES = {
+  citizen:   '生き残れ。',
+  seer:      '暴け。その意志で。',
+  bodyguard: '守り抜け。',
+  medium:    '死人に口あり。',
+  police:    '正義の鉄槌。',
+  cursed:    '狼なんかじゃない。',
+  tanaka:    '田中。',
+  dentist:   '診て真実を見る。',
+  politician:'国民の声に耳を傾ける。',
+  wolfboy:   '狼が出たぞーッ!',
+  bomber:    'てめぇももうおしまいだぁあーーーーーっ！！',
+  wolf:      '村を支配せよ。',
+  traitor:   '狼をアシストせよ。',
+  mafia:     '組織の影で動け。',
+  pharmacist:'静かに、確実に。',
+  detective: '当てれば殺す。外れれば死ぬ。',
+  teru:      '吊られよ。',
+  gambler:   'ダメでもともと。人生はギャンブルだ。',
+  god:       '世界を見下せ。',
+  fireBoy:   'ﾎﾉｵﾉﾅｹﾞﾅﾜﾃﾞｼﾒﾃﾔﾙ!ｲｸｿﾞｰ!ﾌｧｲﾔ-!',
+  copy:      'Take over!',
+};
+
+const GUIDE_DESCRIPTIONS = {
+  wolf:      '人狼陣営。\n毎晩人狼陣営以外の一人を殺害することができる。\n昼の議論では正体を隠し、投票で処刑されないよう立ち回ろう。\n村人の数が人狼と同じかそれ以下になれば人狼の勝利。',
+  traitor:   '人狼陣営の市民。\n特殊能力はないが、占い師に占われると村人陣営と判定される。\n人狼が全員いなくなると敗北する。村人のふりをして人狼を守ろう。',
+  citizen:   '村人陣営。\n特殊能力は持たない普通の村人。\n昼の議論と推理だけが武器。怪しい人物を見つけ、投票で処刑しよう。\n全ての人狼を追放すれば村人陣営の勝利。',
+  seer:      '村人陣営。\n毎晩一人を選んで占うことができる。\n占いの結果、対象が「村人陣営」か「人狼陣営」かが分かる。\n得た情報を活かして村を勝利へ導こう。',
+  bodyguard: '村人陣営。\n毎晩一人（自分以外）を選んで護衛することができる。\n護衛した対象が人狼に狙われた場合、その夜の殺害を防ぐことができる。',
+  medium:    '村人陣営。\n処刑や殺害で死亡したプレイヤーの陣営を調べることができる。\n一人につき一回のみ有効。死者の情報を元に真実を暴こう。',
+  teru:      '個人陣営。\n投票で処刑された瞬間に単独勝利してゲームから退場する。\n夜に人狼に殺された場合は普通にリタイア。\n昼の議論で怪しまれながらも処刑に持ち込むのが目標。',
+  cursed:    '村人陣営。\n普通の市民と同じく村人陣営の勝利を目指す。\nしかし占い師に占われると「人狼陣営」と誤判定されてしまう。\n警察に狙われると死亡するので注意。',
+  police:    '村人陣営。\n毎晩一人を選んで「処刑」することができる。\nターゲットが人狼・裏切り者・狼憑きであれば成功し相手が死亡。\nそれ以外（普通の市民など）を選んだ場合は自分が死んでしまう。棄権も可能。',
+  tanaka:    'I am Tanaka.\nI have a pen.\nI like sushi.\nI am a perfect human.',
+  copy:      '無陣営。\n毎晩、死亡したプレイヤーの役職を一つ選んで引き継げる。\n引き継いだ瞬間からその役職の陣営として扱われる。\n役職を引き継がない場合、ゲーム終了時に勝利できない。',
+  gambler:   '個人陣営。\n夜に一人のプレイヤーを「勝者」として指名する（役職は見えない）。\n指名したプレイヤーの陣営がゲームに勝利した場合、ギャンブラーも単独勝利。\n指名したプレイヤーが死亡した時点で勝利条件を失う。',
+  dentist:   '村人陣営。\n毎晩一人の「虫歯率」を調べることができる。\n村人陣営は0〜60%、人狼陣営・狼憑きは45〜100%の値が表示される。\n数値はランダムなため確定情報ではないが、参考にして推理しよう。',
+  politician:'村人陣営。\n自分の投票が3票分の重みを持つ特殊な能力を持つ。\n自分が投票した相手は処刑されやすくなる。\n使い所を見極め、確信を持った相手に投票しよう。',
+  wolfboy:   '村人陣営。\n2日目の夜から、人狼陣営のプレイヤーが全員分かるようになる。\nただし同時に、人狼側にも自分がオオカミ少年であることがばれてしまう。\n情報を上手く使って村を勝利に導こう。',
+  bomber:    '村人陣営。\n投票で処刑された場合、ランダムで生存者の中から一人を道連れにする。\n夜は市民と同じ行動をする。\n自分が処刑されそうな時、道連れで人狼を仕留める可能性がある。',
+  god:       '個人陣営。\n毎晩、全員の役職を確認することができる。\nゲーム終了時に自分が生きていれば単独勝利（他の勝者より優先される）。\n全情報を持ちながらも生き残ることが最大の課題。',
+  fireBoy:   '個人陣営。\n2日目以降の昼フェーズに1/10の確率で単独勝利できる。\n複数のファイヤーボーイが同時に発動した場合は全員勝利。\n運命に身を委ねながら、ただ生き残ることを目指そう。',
+  mafia:     '人狼陣営。\n人狼が生存中は裏切り者と同じ（夜は算数のみ）。\n人狼が全滅すると毎晩一人を殺害できるようになる。\n占い師に占われると人狼陣営と判定される。',
+  pharmacist:'人狼陣営。\n夜に人狼陣営以外の一人に毒を盛ると、2日後の朝に死亡する。\n毒待ち中の夜は動けず算数のみ。死亡時に毒殺と公表される。\n占い師に占われると人狼陣営と判定される。',
+  detective: '人狼陣営。\n夜にターゲットと役職を選んで推理する。\n正解なら相手が死亡。不正解なら自分が死亡（相手は助かる）。棄権も可。\n占い師に占われると村人陣営と判定される。',
+};
+
+const GUIDE_DESCRIPTIONS_EN = {
+  wolf:      "Wolf Team.\nEach night, eliminate one non-wolf player.\nHide your identity during day discussions and avoid being executed.\nWolves win when their number equals or exceeds the villagers.",
+  traitor:   "Wolf Team.\nA wolf-aligned citizen with no special ability.\nAppears as Village Team when investigated by the Seer.\nLoses if all wolves are eliminated. Protect the wolves from the shadows.",
+  citizen:   "Village Team.\nAn ordinary villager with no special abilities.\nDiscussion and deduction are your only weapons.\nVillage wins when all wolves are banished.",
+  seer:      "Village Team.\nEach night, investigate one player to learn if they are Village or Wolf aligned.\nUse this information to guide the village to victory.",
+  bodyguard: "Village Team.\nEach night, protect one player (not yourself) from wolf attacks.\nIf your chosen player is targeted by wolves, the kill is prevented.",
+  medium:    "Village Team.\nInvestigate the faction of dead players (once per player).\nUse information from the deceased to uncover the truth.",
+  teru:      "Solo.\nWin solo and exit the game if executed by vote.\nEliminated normally if killed at night.\nGoal: get voted out during the day.",
+  cursed:    "Village Team.\nA normal citizen who wants the village to win.\nHowever, the Seer will see them as Wolf faction.\nAlso dies if targeted by the Police.",
+  police:    "Village Team.\nEach night, target one player to execute.\nSuccess if targeting a wolf, traitor, or cursed player.\nTargeting anyone else causes your own death. Can abstain.",
+  tanaka:    "Village Team.\nAt the start of each day, it is announced to all: Tanaka is on the Village Team.\nThe info is reliable, but wolves also know your identity. Acts as Citizen at night.",
+  copy:      "No Faction.\nEach night, inherit the role of a dead player.\nYou immediately join that faction.\nIf you never copy a role, you cannot win.",
+  gambler:   "Solo.\nAt night, nominate one player as the winner (roles hidden).\nIf their faction wins the game, you win solo too.\nIf your nominee dies, you lose your win condition.",
+  dentist:   "Village Team.\nEach night, check one player's cavity rate.\nVillage: 0-60%. Wolf and Cursed: 45-100%.\nValues are random but useful for deduction.",
+  politician:"Village Team.\nYour vote counts as 3x weight, making your target easier to execute.\nChoose your target wisely. Acts as Citizen at night.",
+  wolfboy:   "Village Team.\nFrom night 2 onward, you can see all wolf-aligned players.\nHowever, the wolves also learn your identity at the same time.",
+  bomber:    "Village Team.\nIf executed by vote, one random survivor is taken down with you.\nActs as Citizen at night.",
+  god:       "Solo.\nEach night, view everyone's roles.\nIf you are alive when the game ends, you win solo (overrides all other winners).\nSurviving is your greatest challenge.",
+  fireBoy:   "Solo.\nFrom day 2 onward, 1/10 chance each day to win solo.\nMultiple Fire Boys can win simultaneously.\nLeave it to fate and just survive.",
+  mafia:     "Wolf Team.\nBehaves like a Traitor while any real wolves are alive.\nGains kill ability once all wolves are eliminated.\nSeer sees them as Wolf faction.",
+  pharmacist:"Wolf Team.\nEach night, poison one non-wolf player. They die 2 days later.\nCannot act the night after poisoning. Death is announced as a poisoning.\nSeer sees them as Wolf faction.",
+  detective: "Wolf Team.\nEach night, pick a target and guess their role.\nCorrect guess: target dies. Wrong guess: you die (target survives). Can abstain.\nSeer sees them as Village faction.",
+};
+
+let guideIdx = 0;
+
+function openGuide() {
+  guideIdx = 0;
+  document.getElementById('screen-guide').classList.add('active');
+  renderGuide();
+  if (!bgmUnlocked) {
+    // First interaction — unlock audio and play guide BGM
+    bgmUnlocked = true;
+    document.removeEventListener('touchstart', unlockAudio);
+    document.removeEventListener('click', unlockAudio);
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.connect(ctx.destination); src.start(0);
+      ctx.resume();
+    } catch(e) {}
+  }
+  playBgm('guide');
+}
+
+function closeGuide() {
+  document.getElementById('screen-guide').classList.remove('active');
+  playBgm('title');
+}
+
+function guideNav(dir) {
+  guideIdx = (guideIdx + dir + GUIDE_ROLE_ORDER.length) % GUIDE_ROLE_ORDER.length;
+  renderGuide();
+}
+
+function renderGuide() {
+  const key = GUIDE_ROLE_ORDER[guideIdx];
+  const role = ROLES[key];
+  const typeClass = role.type === 'wolf' ? 'wolf' : role.type === 'solo' || role.type === 'none' ? 'solo' : 'citizen';
+
+  // Name
+  const nameEl = document.getElementById('guide-role-name');
+  nameEl.textContent = role.name;
+  nameEl.className = 'guide-role-name ' + typeClass + '-name';
+
+  // Tag
+  const tagEl = document.getElementById('guide-tag');
+  tagEl.textContent = role.tag;
+  tagEl.className = 'guide-tag ' + typeClass + '-tag';
+
+  // Subtitle
+  const subtitleEl = document.getElementById('guide-subtitle');
+  if (subtitleEl) subtitleEl.textContent = GUIDE_SUBTITLES[key] || '';
+
+  // Description
+  const descs = currentLang === 'en' ? GUIDE_DESCRIPTIONS_EN : GUIDE_DESCRIPTIONS;
+  const rawDesc = descs[key] || role.desc;
+  document.getElementById('guide-desc').innerHTML = rawDesc.replace(/\\n/g, '<br>');
+
+  // Illustration
+  const illustEl = document.getElementById('guide-illust');
+  const imgPath = 'img/' + key + '.png';
+  illustEl.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = imgPath;
+  img.alt = role.name;
+  img.onerror = function() {
+    illustEl.innerHTML = '<div class="guide-illust-placeholder">' + role.emoji + '</div>';
+  };
+  illustEl.appendChild(img);
+
+  // Counter
+  document.getElementById('guide-counter').textContent = (guideIdx + 1) + ' / ' + GUIDE_ROLE_ORDER.length;
+
+  // Update back button text
+  document.querySelector('.guide-back-btn').textContent = currentLang === 'en' ? '← Back' : '← 戻る';
+}
+
+</script>
+
+
+<!-- ====== ROLE GUIDE ====== -->
+<div id="screen-guide">
+  <div class="guide-header">
+    <div class="guide-role-name" id="guide-role-name"></div>
+  </div>
+
+  <div style="position:relative;flex:1;display:flex;min-height:0;">
+    <button class="guide-nav-btn guide-nav-left" onclick="guideNav(-1)">
+      <span class="guide-nav-arrow"></span>
+    </button>
+
+    <div class="guide-body">
+      <div class="guide-illust" id="guide-illust"></div>
+      <div class="guide-info">
+        <div class="guide-subtitle" id="guide-subtitle"></div>
+        <span class="guide-tag" id="guide-tag"></span>
+        <p class="guide-desc" id="guide-desc"></p>
+      </div>
+    </div>
+
+    <button class="guide-nav-btn guide-nav-right" onclick="guideNav(1)">
+      <span class="guide-nav-arrow"></span>
+    </button>
+  </div>
+
+  <div class="guide-footer">
+    <div class="guide-counter" id="guide-counter"></div>
+    <button class="guide-back-btn" onclick="closeGuide()">← 戻る</button>
+  </div>
+</div>
+</body>
+</html>
